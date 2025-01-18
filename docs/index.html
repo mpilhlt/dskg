@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Radial Knowledge Graph</title>
+  <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+  <style>
+    #cy {
+      width: 100%;
+      height: 100vh;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="cy"></div>
+  <script>
+    // Initialize Cytoscape graph
+    const cy = cytoscape({
+      container: document.getElementById('cy'),
+      elements: [
+        // Tasks
+        { data: { id: 'task1', label: 'Task 1' } },
+        { data: { id: 'task2', label: 'Task 2' } },
+        { data: { id: 'task3', label: 'Task 3' } },
+        { data: { id: 'task4', label: 'Task 4' } },
+        // Tools
+        { data: { id: 'tool1', label: 'Tool 1' } },
+        { data: { id: 'tool2', label: 'Tool 2' } },
+        { data: { id: 'tool3', label: 'Tool 3' } },
+        { data: { id: 'tool4', label: 'Tool 4' } },
+        // Resources and People
+        { data: { id: 'resource1', label: 'Resource 1' } },
+        { data: { id: 'resource2', label: 'Resource 2' } },
+        { data: { id: 'person1', label: 'Person 1' } },
+        { data: { id: 'person2', label: 'Person 2' } },
+        { data: { id: 'org1', label: 'Organization 1' } },
+        { data: { id: 'org2', label: 'Organization 2' } },
+        // Edges
+        { data: { id: 'e1', source: 'task1', target: 'tool1' } },
+        { data: { id: 'e2', source: 'task1', target: 'tool2' } },
+        { data: { id: 'e3', source: 'task2', target: 'tool3' } },
+        { data: { id: 'e4', source: 'task3', target: 'tool4' } },
+        { data: { id: 'e5', source: 'tool1', target: 'resource1' } },
+        { data: { id: 'e6', source: 'tool2', target: 'person1' } },
+        { data: { id: 'e7', source: 'tool3', target: 'resource2' } },
+        { data: { id: 'e8', source: 'tool4', target: 'person2' } },
+        { data: { id: 'e9', source: 'person1', target: 'org1' } },
+        { data: { id: 'e10', source: 'person2', target: 'org2' } }
+      ],
+      style: [
+        {
+          selector: 'node',
+          style: {
+            'label': 'data(label)',
+            'text-valign': 'center',
+            'text-halign': 'center',
+            'background-color': '#6495ED',
+            'color': '#ffffff',
+            'width': 50,
+            'height': 50
+          }
+        },
+        {
+          selector: 'edge',
+          style: {
+            'width': 2,
+            'line-color': '#cccccc',
+            'target-arrow-color': '#cccccc',
+            'target-arrow-shape': 'triangle'
+          }
+        }
+      ]
+    });
+
+    // Function to show a radial network for a selected node
+    function showRadial(nodeId) {
+      const node = cy.$(`#${nodeId}`);
+      const connectedEdges = node.connectedEdges(); // Edges connected to the node
+      const connectedNodes = connectedEdges.targets().add(connectedEdges.sources()); // Connected nodes
+      const parentEdges = node.incomers('edge'); // Parent edges
+      const parentNodes = parentEdges.sources(); // Parent nodes
+
+      // Show only the selected node, its direct children, and its parent
+      cy.elements().hide();
+      node.show(); // Show the selected node
+      connectedNodes.show(); // Show connected nodes
+      connectedEdges.show(); // Show edges connected to visible nodes
+      parentNodes.show(); // Show parent node(s)
+      parentEdges.show(); // Show edges connecting to parent
+
+      // Apply a concentric layout with the node at the center
+      cy.layout({
+        name: 'concentric',
+        fit: true, // Fit the viewport
+        animate: true,
+        animationDuration: 800,
+        avoidOverlap: true,
+        concentric: (ele) => (ele.id() === nodeId ? 2 : 1), // Central node gets highest weight
+        levelWidth: () => 1, // All nodes one level apart
+        padding: 50
+      }).run();
+    }
+
+    // Show only tasks on the home screen, arranged radially
+    function showTasksRadial() {
+      cy.elements().hide(); // Hide everything
+      const taskNodes = cy.nodes('[id^="task"]'); // Get task nodes
+      taskNodes.show(); // Show only task nodes
+
+      // Apply concentric layout for radial display
+      cy.layout({
+        name: 'concentric',
+        fit: true,
+        animate: true,
+        animationDuration: 800,
+        avoidOverlap: true,
+        concentric: (ele) => 1, // All tasks have equal weight
+        levelWidth: () => 1, // Keep nodes evenly distributed
+        padding: 50
+      }).run();
+    }
+
+    // Node click event
+    cy.on('tap', 'node', (event) => {
+      const nodeId = event.target.id();
+      showRadial(nodeId); // Show the radial network for the clicked node
+    });
+
+    // Initialize the graph with a radial task-only layout
+    showTasksRadial();
+  </script>
+</body>
+</html>
