@@ -1,5 +1,5 @@
 
-// global graph object
+// global vars
 let cy;
 
 // Initialize Cytoscape graph
@@ -10,28 +10,27 @@ function initGraph(data) {
         elements: data,
         style: [
             {
-                selector: 'node[width]', // Only apply this style to nodes with a `width` data field
+                // Style for nodes which have a background image
+                selector: 'node[background_url]', 
                 style: {
                     'label': 'data(label)',
                     'text-valign': 'center',
                     'text-halign': 'center',
-                    'background-color': '#6495ED',
-                    'color': '#ffffff',
-                    'width': 'data(width)',
-                    'height': 'data(width)',
-                    'font-size': function (ele) {
-                        const nodeWidth = ele.data('width');
-                        return nodeWidth && nodeWidth > 0
-                            ? Math.max(6, Math.min(12, nodeWidth * 0.3))
-                            : 10;
-                    },
+                    'background-image': el => `url(${el.data('background_url')})`,
+                    'background-image-crossorigin': 'null',
+                    'background-fit': 'cover', // Adjust to fit the node
+                    'color': '#ffffff', // Default text color
+                    'width': 60, 
+                    'height': 60,
+                    'font-size': 8, // Default font size
                     'text-wrap': 'wrap',
-                    'text-max-width': '80px',
+                    'text-max-width': '60px',
                     'min-zoomed-font-size': 6
                 }
-            },
+            },            
             {
-                selector: 'node', // Default style for nodes without a `width` field
+                // Default style for nodes 
+                selector: 'node[^background_url]', 
                 style: {
                     'label': 'data(label)',
                     'text-valign': 'center',
@@ -40,7 +39,7 @@ function initGraph(data) {
                     'color': '#000000', // Default text color
                     'width': 60, // Default size
                     'height': 60,
-                    'font-size': 10, // Default font size
+                    'font-size': 8, // Default font size
                     'text-wrap': 'wrap',
                     'text-max-width': '60px',
                     'min-zoomed-font-size': 6
@@ -151,34 +150,36 @@ function showRadial(nodeId) {
 // Add a radial network for nodes of the given type
 function showNodesOfType(type) {
     cy.elements().hide();
-    const childNodes = cy.nodes(`[type="${type}"]`);
-    childNodes.show();
-    // Add a virtual node with the label of the type 
-    const virtualNode = cy.add({
-        data: {
-            id: `virtual-${type}-node`,
-            label: type + 's',
-            type: 'Virtual'
-        },
-        style: {
-            'background-color': '#f0f0f0',
-            'width': '60px',
-            'height': '60px',
-            'label': 'Tasks'
-        }
-    });
-
-    // Link all task nodes to the virtual node
-    childNodes.forEach(taskNode => {
-        cy.add({
+    const typeNodes = cy.nodes(`[type="${type}"]`);
+    typeNodes.show();
+    const id = `virtual-${type}-node`;
+    if (cy.$id(id).length == 0) {
+        // Add a virtual node with the label of the type 
+        const virtualNode = cy.add({
             data: {
-                id: `edge-${taskNode.id()}`,  // Unique edge ID
-                source: virtualNode.id(),     // Source is the virtual node
-                target: taskNode.id()         // Target is each task node
+                id,
+                label: type + 's',
+                type: 'Virtual'
+            },
+            style: {
+                'label': 'data(label)',
+                'background-color': '#f0f0f0',
+                'width': '60px',
+                'height': '60px',
             }
         });
-    });
-    showRadial('tasks-node'); // Show radial network for the virtual node
+        // Link all nodes of that type to the virtual node
+        typeNodes.forEach(node => {
+            cy.add({
+                data: {
+                    id: `virtual-edge-${id}-${node.id()}`,
+                    source: id, 
+                    target: node.id()
+                }
+            });
+        });
+    }
+    showRadial(id);
 }
 
 
@@ -195,10 +196,10 @@ function showTasks() {
             type: 'Virtual'    // Custom type for the virtual node
         },
         style: {
+            'label': 'data(label)', // Show the label
             'background-color': '#f0f0f0', // Give virtual node a neutral color
             'width': '60px',  // Define size
             'height': '60px',
-            'label': 'Tasks'
         }
     });
 
@@ -206,7 +207,7 @@ function showTasks() {
     taskNodes.forEach(taskNode => {
         cy.add({
             data: {
-                id: `edge-${taskNode.id()}`,  // Unique edge ID
+                id: `edge-${taskNode.id()}-${virtualNode.id()}`,  // Unique edge ID
                 source: virtualNode.id(),     // Source is the virtual node
                 target: taskNode.id()         // Target is each task node
             }
@@ -269,42 +270,41 @@ function showUserMessage(title, message) {
 async function fetchGraph(endpoint, database, username, password) {
     const driver = neo4j.driver(endpoint, neo4j.auth.basic(username, password));
     const session = driver.session({ database });
-
+    let node_result, edge_result;
     try {
-        // get nodes
-        const result = await session.run(`MATCH (n) RETURN n`);
-        const nodes = result.records.map((record) => {
-            const node = record.get('n');
-            return {
-                data: {
-                    id: "node-" + node.identity.low,
-                    label: node.properties.name,
-                    type: node.labels[0]
-                }
-            };
-        });
-        // get edges
-        const result2 = await session.run(`MATCH (n)-[r]->(m) RETURN n, r, m`);
-        const edges = result2.records.map((record) => {
-            const edge = record.get('r');
-            return {
-                data: {
-                    id: "edge-" + edge.identity.low,
-                    source: "node-" + edge.start.low,
-                    target: "node-" + edge.end.low,
-                    type: edge.type
-                }
-            };
-        });
-        const data = nodes.concat(edges);
-        //console.dir(data)
-        return data;
+        node_result = await session.run(`MATCH (n) RETURN n`);
+        edge_result = await session.run(`MATCH (n)-[r]->(m) RETURN r`);
     } catch (error) {
         console.error(error)
         throw error; // Rethrow the error
     } finally {
         session.close();
     }
+    const nodes = node_result.records.map((record) => {
+        const node = record.get('n');
+        const type = node.labels[0];
+        const id = "node-" + node.identity.low
+        const label = node.properties.name;
+        const data = { id, label, type };
+        if (node.properties.image_url) {
+            data.background_url = node.properties.image_url;
+        }
+        return {data};
+    });
+    const edges = edge_result.records.map((record) => {
+        const edge = record.get('r');
+        return {
+            data: {
+                id: `edge-${edge.start.low}-${edge.end.low}`,
+                source: "node-" + edge.start.low,
+                target: "node-" + edge.end.low,
+                type: edge.type
+            }
+        };
+    });
+    const data = nodes.concat(edges);
+    //console.dir(data)
+    return data;
 }
 
 async function initWithLiveData() {
