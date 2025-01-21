@@ -11,12 +11,12 @@ const demo = [
     { data: { id: 'tool3', label: 'Tool 3', type: 'Tool' } },
     { data: { id: 'tool4', label: 'Tool 4', type: 'Tool' } },
     // Resources and People
-    { data: { id: 'resource1', label: 'Resource 1' } },
-    { data: { id: 'resource2', label: 'Resource 2' } },
-    { data: { id: 'person1', label: 'Person 1' } },
-    { data: { id: 'person2', label: 'Person 2' } },
-    { data: { id: 'org1', label: 'Organization 1' } },
-    { data: { id: 'org2', label: 'Organization 2' } },
+    { data: { id: 'resource1', label: 'Resource 1', type: 'Resource' } },
+    { data: { id: 'resource2', label: 'Resource 2', type: 'Resource' } },
+    { data: { id: 'person1', label: 'Person 1', type: 'Person', background_url: 'demo/kermit.png' } },
+    { data: { id: 'person2', label: 'Person 2', type: 'Person', background_url: 'demo/misspiggy.png' } },
+    { data: { id: 'org1', label: 'Organization 1', type: 'Organization' } },
+    { data: { id: 'org2', label: 'Organization 2', type: 'Organization' } },
     // Edges
     { data: { id: 'e1', source: 'task1', target: 'tool1' } },
     { data: { id: 'e2', source: 'task1', target: 'tool2' } },
@@ -24,8 +24,10 @@ const demo = [
     { data: { id: 'e4', source: 'task3', target: 'tool4' } },
     { data: { id: 'e5', source: 'tool1', target: 'resource1' } },
     { data: { id: 'e6', source: 'tool2', target: 'person1' } },
+    { data: { id: 'e6b', source: 'tool1', target: 'person1' } },
     { data: { id: 'e7', source: 'tool3', target: 'resource2' } },
     { data: { id: 'e8', source: 'tool4', target: 'person2' } },
+    { data: { id: 'e8b', source: 'tool3', target: 'person2' } },
     { data: { id: 'e9', source: 'person1', target: 'org1' } },
     { data: { id: 'e10', source: 'person2', target: 'org2' } }
 ]
