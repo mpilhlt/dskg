@@ -1,4 +1,4 @@
-class CookieStorage {
+ export class CookieStorage {
     /**
      * Constructor for CookieStorage.
      * @param {object} [config={}] - Configuration for cookies.
@@ -67,7 +67,7 @@ class CookieStorage {
 }
 
 
-class UrlHash {
+export class UrlHash {
 
     /**
      * Sets or updates a hash parameter in the URL without reloading the page and ensures browser history is updated.
