@@ -1,8 +1,24 @@
-// imported via <script> in index.html: cytoscape_style, cytoscape_layout, CookieStorage, UrlHash
-// todo: use proper module imports
+import { CookieStorage, UrlHash } from './utils.js'
+import { cytoscape_style } from './cytoscape-style.js'
+import { cytoscape_layout } from './cytoscape-layout.js'
+import { demo_data } from '../demo/demodata.js';
 
 // global vars
 let cy;
+
+// run app
+main();
+
+function main() {
+    if (UrlHash.get("authenticate") !== null) {
+        authenticate();
+        UrlHash.remove("authenticate")
+    } else if ((new CookieStorage()).get("mpilhlt_neo4j_credentials")) {
+        initWithLiveData();
+    } else {
+        initWithDemoData();
+    }
+}
 
 // non-blocking alert()
 function showUserMessage(title, message) {
@@ -18,7 +34,7 @@ function initGraph(data) {
     cy = cytoscape({
         container: document.getElementById('cy'),
         elements: data,
-        style: cytoscape_stye
+        style: cytoscape_style
     });
 
     // Node click event sets hash value
@@ -33,7 +49,7 @@ function initGraph(data) {
         if (nodeId) {
             showRadial(nodeId)
         }
-    });    
+    });
 }
 
 
@@ -84,7 +100,7 @@ function showNodesOfType(type) {
             cy.add({
                 data: {
                     id: `virtual-edge-${id}-${node.id()}`,
-                    source: id, 
+                    source: id,
                     target: node.id()
                 }
             });
@@ -97,9 +113,9 @@ function showNodesOfType(type) {
 // Add a radial network for the "Tasks" virtual node
 function showTasks() {
     // Show only the "Task" nodes
-    cy.elements().hide(); 
+    cy.elements().hide();
     const taskNodes = cy.nodes('[type="Task"]');
-    taskNodes.show(); 
+    taskNodes.show();
 
     // Add a virtual node with the label "Tasks"
     const virtualNode = cy.add({
@@ -188,7 +204,7 @@ async function fetchGraph(endpoint, database, username, password) {
         if (node.properties.image_url) {
             data.background_url = node.properties.image_url;
         }
-        return {data};
+        return { data };
     });
     const edges = edge_result.records.map((record) => {
         const edge = record.get('r');
@@ -219,6 +235,6 @@ async function initWithLiveData() {
 }
 
 function initWithDemoData() {
-    initGraph(demo);
+    initGraph(demo_data);
     showTasks();
 }

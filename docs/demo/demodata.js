@@ -1,5 +1,5 @@
 // Demo data to show when we have not Neo4J connection
-const demo = [
+export const demo_data = [
     // Tasks
     { data: { id: 'task1', label: 'Task 1', type: 'Task' } },
     { data: { id: 'task2', label: 'Task 2', type: 'Task' } },

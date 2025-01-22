@@ -1,4 +1,4 @@
-const cytoscape_layout = {
+export const cytoscape_layout = {
     name: 'cose',
     // 'draft', 'default' or 'proof" 
     // - 'draft' fast cooling rate 

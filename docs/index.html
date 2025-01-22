@@ -5,18 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>mpilhlt Digital Services Knowledge Graph</title>
-
   <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://unpkg.com/layout-base/layout-base.js"></script>
   <script src="https://unpkg.com/cose-base/cose-base.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/cytoscape-cose-bilkent@4.1.0/cytoscape-cose-bilkent.min.js"></script>
   <script src="https://unpkg.com/neo4j-driver"></script>
-  <script src="demo/demodata.js"></script>
-  <script src="js/utils.js"></script>
-  <script src="js/cytoscape-layout.js"></script>
-  <script src="js/cytoscape-style.js"></script>
-  <script src="js/app.js"></script>
   <style>
     #cy {
       width: 100%;
@@ -98,19 +92,7 @@
   </dialog>
 
   <!-- startup -->
-  <script>
-    // remove legacy storage method data
-    localStorage.removeItem("mpilhlt_neo4j_credentials")
-
-    if (UrlHash.get("authenticate") !== null) {
-      authenticate();
-      UrlHash.remove("authenticate")
-    } else if ((new CookieStorage()).get("mpilhlt_neo4j_credentials")) {
-      initWithLiveData();
-    } else {
-      initWithDemoData();
-    }
-  </script>
+  <script type="module" src="js/app.js"></script>
 </body>
 
 </html>

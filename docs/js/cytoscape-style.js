@@ -1,5 +1,4 @@
-const cytoscape_stye = 
-[
+export const cytoscape_style = [
     {
         // default node style
         selector: 'node',
