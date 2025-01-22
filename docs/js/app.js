@@ -34,7 +34,10 @@ function init(data){
     const nodeId = UrlHash.get("nodeId")
     if (nodeId) {
         showRadial(nodeId)
-    } else if (!UrlHash.has("all")) {
+    } else if (UrlHash.has("all")) {
+        addVirtualNodes()
+        cy.layout(cytoscape_layout).run();
+    } else {
         showTasks()
     }
 }
@@ -109,34 +112,33 @@ function showRadial(nodeId) {
     cy.layout(cytoscape_layout).run();
 }
 
-// Add a radial network for nodes of the given type
-function showNodesOfType(type) {
-    cy.elements().hide();
-    const typeNodes = cy.nodes(`[type="${type}"]`);
-    typeNodes.show();
-    const id = `virtual-${type}-node`;
-
-    if (cy.$id(id).length == 0) {
-        // Add a virtual node with the label of the type 
-        const virtualNode = cy.add({
-            data: {
-                id,
-                label: type + 's',
-                type: 'Virtual'
-            }
-        });
-        // Link all nodes of that type to the virtual node
-        typeNodes.forEach(node => {
-            cy.add({
+function addVirtualNodes() {
+    const types = new Set(cy.nodes(`[type]`).map(node => node.data('type')))
+    console.log(types)
+    for (let type of types){
+        const id = `virtual-${type}-node`;
+        console.log(id)
+        if (cy.$id(id).length == 0) {
+            // Add a virtual node with the label of the type 
+            const virtualNode = cy.add({
                 data: {
-                    id: `virtual-edge-${id}-${node.id()}`,
-                    source: id,
-                    target: node.id()
+                    id,
+                    label: type + 's',
+                    type: 'Virtual'
                 }
             });
-        });
+            // Link all nodes of that type to the virtual node
+            cy.nodes(`[type="${type}"]`).forEach(node => {
+                cy.add({
+                    data: {
+                        id: `virtual-edge-${id}-${node.id()}`,
+                        source: id,
+                        target: node.id()
+                    }
+                });
+            });
+        }
     }
-    showRadial(id);
 }
 
 
