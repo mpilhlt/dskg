@@ -11,8 +11,8 @@ export const demo_data = [
     { data: { id: 'tool3', label: 'Tool 3', type: 'Tool' } },
     { data: { id: 'tool4', label: 'Tool 4', type: 'Tool' } },
     // Resources and People
-    { data: { id: 'resource1', label: 'Resource 1', type: 'Resource' } },
-    { data: { id: 'resource2', label: 'Resource 2', type: 'Resource' } },
+    { data: { id: 'resource1', label: 'Web-Resource 1', url: 'https://developer.mozilla.org/en-US', type: 'Resource' } },
+    { data: { id: 'resource2', label: 'Web-Resource 2', url: 'https://guides.nyu.edu/digital-humanities/tools-and-software', type: 'Resource' } },
     { data: { id: 'person1', label: 'Person 1', type: 'Person', background_url: 'demo/kermit.png' } },
     { data: { id: 'person2', label: 'Person 2', type: 'Person', background_url: 'demo/misspiggy.png' } },
     { data: { id: 'org1', label: 'Organization 1', type: 'Organization' } },

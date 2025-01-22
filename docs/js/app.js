@@ -37,11 +37,30 @@ function initGraph(data) {
         style: cytoscape_style
     });
 
-    // Node click event sets hash value
+    let previewWindow = null;
+
+    // user clicks on node
     cy.on('tap', 'node', (event) => {
-        const nodeId = event.target.id();
-        UrlHash.set('nodeId', nodeId)
+        const node = event.target; // Directly get the tapped node
+        const nodeId = node.id();
+        const nodeData = node.data(); // Access node's data properties
+    
+        if (nodeData.url) {
+            // Check if the preview window already exists and is open
+            if (!previewWindow || previewWindow.closed) {
+                // Open a new window if not already open
+                previewWindow = window.open(nodeData.url, '_blank');
+            } else {
+                // If the window is already open, just focus on it and update the URL
+                previewWindow.location.href = nodeData.url;
+                previewWindow.focus();
+            }
+        } else {
+            // Update URL hash and potentially update the graph
+            UrlHash.set('nodeId', nodeId);
+        }
     });
+    
 
     // Add a listener for center node changes
     window.addEventListener('hashchange', () => {
@@ -203,6 +222,9 @@ async function fetchGraph(endpoint, database, username, password) {
         const data = { id, label, type };
         if (node.properties.image_url) {
             data.background_url = node.properties.image_url;
+        }
+        if (node.properties.URL) {
+            data.url = node.properties.URL;
         }
         return { data };
     });
