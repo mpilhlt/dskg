@@ -20,12 +20,23 @@ function main() {
     }
 }
 
-// non-blocking alert()
+// Non-blocking alert()
 function showUserMessage(title, message) {
     const userMessage = document.getElementById('userMessage');
     userMessage.showModal();
     userMessage.querySelector('.dialog-header').textContent = title;
     userMessage.querySelector('.dialog-content').textContent = message;
+}
+
+// Show the graph
+function init(data){
+    initGraph(data);
+    const nodeId = UrlHash.get("nodeId")
+    if (nodeId) {
+        showRadial(nodeId)
+    } else if (!UrlHash.has("all")) {
+        showTasks()
+    }
 }
 
 // Initialize Cytoscape graph
@@ -252,11 +263,9 @@ async function initWithLiveData() {
     } catch (error) {
         showUserMessage('Error', 'Failed to fetch data from Neo4J: ' + error.message);
     }
-    initGraph(data);
-    showTasks();
+    init(data);
 }
 
 function initWithDemoData() {
-    initGraph(demo_data);
-    showTasks();
+    init(demo_data);
 }

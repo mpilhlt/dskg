@@ -38,6 +38,15 @@
     }
 
     /**
+     * Returns true if the key exists in the cookies or false if not
+     * @param {string} key The key of the hash parameter to retrieve.
+     * @returns {boolean}
+     */
+    static has(key) {
+        return this.get(key) !== null;
+    }      
+
+    /**
      * Sets a cookie with a specified key and value. If it is not a string,
      * JSON-encode it before storing it. 
      * @param {string} key - The key of the cookie.
@@ -92,6 +101,15 @@ export class UrlHash {
         const hash = new URLSearchParams(window.location.hash.slice(1));
         return hash.get(key);
     }
+
+    /**
+     * Returns true if the key exists in the URL hash or false if not
+     * @param {string} key The key of the hash parameter to retrieve.
+     * @returns  {boolean}
+     */
+    static has(key) {
+        return UrlHash.get(key) !== null;
+    }    
 
     /**
      * Removes a hash parameter from the URL without reloading the page.
