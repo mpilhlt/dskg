@@ -45,7 +45,7 @@ function initGraph(data) {
         const nodeId = node.id();
         const nodeData = node.data(); // Access node's data properties
     
-        if (nodeData.url) {
+        if (nodeData.type == 'Resource' && nodeData.url) {
             // Check if the preview window already exists and is open
             if (!previewWindow || previewWindow.closed) {
                 // Open a new window if not already open

@@ -6,7 +6,7 @@ export const demo_data = [
     { data: { id: 'task3', label: 'Task 3', type: 'Task' } },
     { data: { id: 'task4', label: 'Task 4', type: 'Task' } },
     // Tools
-    { data: { id: 'tool1', label: 'Tool 1', type: 'Tool' } },
+    { data: { id: 'tool1', label: 'Tool 1', type: 'Tool', url: 'https://www.zotero.org' } },
     { data: { id: 'tool2', label: 'Tool 2', type: 'Tool' } },
     { data: { id: 'tool3', label: 'Tool 3', type: 'Tool' } },
     { data: { id: 'tool4', label: 'Tool 4', type: 'Tool' } },
