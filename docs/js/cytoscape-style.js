@@ -29,6 +29,15 @@ const cytoscape_stye =
         }
     },
     {
+        selector: 'node[type="Virtual"]',
+        style: {
+            'label': 'data(label)',
+            'background-color': '#f0f0f0',
+            'width': '60px',
+            'height': '60px',
+        }
+    },
+    {
         selector: 'node[type="Task"]',
         style: {
             'shape': 'ellipse', 

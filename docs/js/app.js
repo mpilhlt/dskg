@@ -1,7 +1,16 @@
-// imported: cytoscape_style, CookieStorage, UrlHash
+// imported via <script> in index.html: cytoscape_style, cytoscape_layout, CookieStorage, UrlHash
+// todo: use proper module imports
 
 // global vars
 let cy;
+
+// non-blocking alert()
+function showUserMessage(title, message) {
+    const userMessage = document.getElementById('userMessage');
+    userMessage.showModal();
+    userMessage.querySelector('.dialog-header').textContent = title;
+    userMessage.querySelector('.dialog-content').textContent = message;
+}
 
 // Initialize Cytoscape graph
 function initGraph(data) {
@@ -51,54 +60,7 @@ function showRadial(nodeId) {
     parentEdges.show();
 
     // Apply a concentric layout with the node at the center
-    cy.layout({
-        name: 'cose',
-        // 'draft', 'default' or 'proof" 
-        // - 'draft' fast cooling rate 
-        // - 'default' moderate cooling rate 
-        // - "proof" slow cooling rate
-        quality: 'default',
-        // Whether to include labels in node dimensions. Useful for avoiding label overlap
-        nodeDimensionsIncludeLabels: false,
-        // number of ticks per frame; higher is faster but more jerky
-        refresh: 30,
-        // Whether to fit the network view after when done
-        fit: true,
-        // Padding on fit
-        padding: 10,
-        // Whether to enable incremental mode
-        randomize: true,
-        // Node repulsion (non overlapping) multiplier
-        nodeRepulsion: 4500,
-        // Ideal (intra-graph) edge length
-        idealEdgeLength: 50,
-        // Divisor to compute edge forces
-        edgeElasticity: 0.45,
-        // Nesting factor (multiplier) to compute ideal edge length for inter-graph edges
-        nestingFactor: 0.1,
-        // Gravity force (constant)
-        gravity: 0.25,
-        // Maximum number of iterations to perform
-        numIter: 2500,
-        // Whether to tile disconnected nodes
-        tile: true,
-        // Type of layout animation. The option set is {'during', 'end', false}
-        animate: 'end',
-        // Duration for animate:end
-        animationDuration: 500,
-        // Amount of vertical space to put between degree zero nodes during tiling (can also be a function)
-        tilingPaddingVertical: 10,
-        // Amount of horizontal space to put between degree zero nodes during tiling (can also be a function)
-        tilingPaddingHorizontal: 10,
-        // Gravity range (constant) for compounds
-        gravityRangeCompound: 1.5,
-        // Gravity force (constant) for compounds
-        gravityCompound: 1.0,
-        // Gravity range (constant)
-        gravityRange: 3.8,
-        // Initial cooling factor for incremental layout
-        initialEnergyOnIncremental: 0.5
-    }).run();
+    cy.layout(cytoscape_layout).run();
 }
 
 // Add a radial network for nodes of the given type
@@ -107,6 +69,7 @@ function showNodesOfType(type) {
     const typeNodes = cy.nodes(`[type="${type}"]`);
     typeNodes.show();
     const id = `virtual-${type}-node`;
+
     if (cy.$id(id).length == 0) {
         // Add a virtual node with the label of the type 
         const virtualNode = cy.add({
@@ -114,12 +77,6 @@ function showNodesOfType(type) {
                 id,
                 label: type + 's',
                 type: 'Virtual'
-            },
-            style: {
-                'label': 'data(label)',
-                'background-color': '#f0f0f0',
-                'width': '60px',
-                'height': '60px',
             }
         });
         // Link all nodes of that type to the virtual node
@@ -139,21 +96,17 @@ function showNodesOfType(type) {
 
 // Add a radial network for the "Tasks" virtual node
 function showTasks() {
-    cy.elements().hide(); // Hide everything
-    const taskNodes = cy.nodes('[type="Task"]'); // Get task nodes
-    taskNodes.show(); // Show only task nodes
+    // Show only the "Task" nodes
+    cy.elements().hide(); 
+    const taskNodes = cy.nodes('[type="Task"]');
+    taskNodes.show(); 
+
     // Add a virtual node with the label "Tasks"
     const virtualNode = cy.add({
         data: {
             id: 'tasks-node',  // Unique ID for the virtual node
             label: 'Tasks',    // Label for the virtual node
             type: 'Virtual'    // Custom type for the virtual node
-        },
-        style: {
-            'label': 'data(label)', // Show the label
-            'background-color': '#f0f0f0', // Give virtual node a neutral color
-            'width': '60px',  // Define size
-            'height': '60px',
         }
     });
 
@@ -210,14 +163,6 @@ function authenticate() {
     });
     authDialog.showModal();
 
-}
-
-// better than alert()
-function showUserMessage(title, message) {
-    const userMessage = document.getElementById('userMessage');
-    userMessage.showModal();
-    userMessage.querySelector('.dialog-header').textContent = title;
-    userMessage.querySelector('.dialog-content').textContent = message;
 }
 
 // fetches graph data from Neo4J
