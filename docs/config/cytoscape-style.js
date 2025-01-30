@@ -31,9 +31,10 @@ export const cytoscape_style = [
         selector: 'node[type="Virtual"]',
         style: {
             'label': 'data(label)',
+            'shape': 'rectangle',
             'background-color': '#f0f0f0',
             'width': '60px',
-            'height': '60px',
+            'height': '30px',
         }
     },
     {

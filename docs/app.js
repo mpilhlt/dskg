@@ -25,6 +25,21 @@ function main() {
     }
 }
 
+async function initWithLiveData() {
+    const credentials = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
+    let data;
+    try {
+        data = await fetchGraph(credentials.endpoint, credentials.database, credentials.username, atob(credentials.password));
+    } catch (error) {
+        showUserMessage('Error', 'Failed to fetch data from Neo4J: ' + error.message);
+    }
+    init(data);
+}
+
+function initWithDemoData() {
+    init(demo_data);
+}
+
 // Non-blocking alert()
 function showUserMessage(title, message) {
     const userMessage = document.getElementById('userMessage');
@@ -36,14 +51,14 @@ function showUserMessage(title, message) {
 // Show the graph
 function init(data){
     initGraph(data);
+    addVirtualNodes();
     const nodeId = UrlHash.get("nodeId")
     if (nodeId) {
         showRadial(nodeId)
     } else if (UrlHash.has("all")) {
-        addVirtualNodes()
         cy.layout(cytoscape_layout).run();
     } else {
-        showTasks()
+        showRadial('Tasks');
     }
 }
 
@@ -119,10 +134,8 @@ function showRadial(nodeId) {
 
 function addVirtualNodes() {
     const types = new Set(cy.nodes(`[type]`).map(node => node.data('type')))
-    console.log(types)
     for (let type of types){
-        const id = `virtual-${type}-node`;
-        console.log(id)
+        const id = `${type}s`;
         if (cy.$id(id).length == 0) {
             // Add a virtual node with the label of the type 
             const virtualNode = cy.add({
@@ -136,7 +149,7 @@ function addVirtualNodes() {
             cy.nodes(`[type="${type}"]`).forEach(node => {
                 cy.add({
                     data: {
-                        id: `virtual-edge-${id}-${node.id()}`,
+                        id: `edge-${id}-${node.id()}`,
                         source: id,
                         target: node.id()
                     }
@@ -146,35 +159,6 @@ function addVirtualNodes() {
     }
 }
 
-
-// Add a radial network for the "Tasks" virtual node
-function showTasks() {
-    // Show only the "Task" nodes
-    cy.elements().hide();
-    const taskNodes = cy.nodes('[type="Task"]');
-    taskNodes.show();
-
-    // Add a virtual node with the label "Tasks"
-    const virtualNode = cy.add({
-        data: {
-            id: 'tasks-node',  // Unique ID for the virtual node
-            label: 'Tasks',    // Label for the virtual node
-            type: 'Virtual'    // Custom type for the virtual node
-        }
-    });
-
-    // Link all task nodes to the virtual node
-    taskNodes.forEach(taskNode => {
-        cy.add({
-            data: {
-                id: `edge-${taskNode.id()}-${virtualNode.id()}`,  // Unique edge ID
-                source: virtualNode.id(),     // Source is the virtual node
-                target: taskNode.id()         // Target is each task node
-            }
-        });
-    });
-    showRadial('tasks-node'); // Show radial network for the virtual node
-}
 
 // Neo4J authentication
 function authenticate() {
@@ -262,17 +246,3 @@ async function fetchGraph(endpoint, database, username, password) {
     return data;
 }
 
-async function initWithLiveData() {
-    const credentials = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
-    let data;
-    try {
-        data = await fetchGraph(credentials.endpoint, credentials.database, credentials.username, atob(credentials.password));
-    } catch (error) {
-        showUserMessage('Error', 'Failed to fetch data from Neo4J: ' + error.message);
-    }
-    init(data);
-}
-
-function initWithDemoData() {
-    init(demo_data);
-}
