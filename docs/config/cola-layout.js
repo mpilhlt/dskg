@@ -3,12 +3,12 @@ export const cytoscape_layout = {
     infinite: true,
     animate: true, // whether to show the layout as it's running
     refresh: 1, // number of ticks per frame; higher is faster but more jerky
-    maxSimulationTime: 4000, // max length in ms to run the layout
+    maxSimulationTime: 500, // max length in ms to run the layout
     ungrabifyWhileSimulating: false, // so you can't drag nodes during layout
     fit: true, // on every layout reposition of nodes, fit the viewport
     padding: 30, // padding around the simulation
     boundingBox: undefined, // constrain layout bounds; { x1, y1, x2, y2 } or { x1, y1, w, h }
-    nodeDimensionsIncludeLabels: false, // whether labels should be included in determining the space used by a node
+    nodeDimensionsIncludeLabels: true, // whether labels should be included in determining the space used by a node
   
     // layout event callbacks
     ready: function(){}, // on layoutready

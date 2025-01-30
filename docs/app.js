@@ -17,16 +17,21 @@ let cy;
 main();
 
 function main() {
-    if (UrlHash.get("authenticate") !== null) {
-        authenticate();
-        UrlHash.remove("authenticate")
-    } else if ((new CookieStorage()).get("mpilhlt_neo4j_credentials")) {
+    if ((new CookieStorage()).get("mpilhlt_neo4j_credentials")) {
         initWithLiveData();
     } else {
         initWithDemoData();
     }
 
     document.getElementById('loginButton').addEventListener('click', authenticate);
+
+    // Add a listener for center node changes
+    window.addEventListener('hashchange', () => {
+        const nodeId = UrlHash.get('nodeId');
+        if (nodeId) {
+            showRadial(nodeId)
+        }
+    });
 }
 
 async function initWithLiveData() {
@@ -98,15 +103,7 @@ function initGraph(data) {
             UrlHash.set('nodeId', nodeId);
         }
     });
-    
 
-    // Add a listener for center node changes
-    window.addEventListener('hashchange', () => {
-        const nodeId = UrlHash.get('nodeId');
-        if (nodeId) {
-            showRadial(nodeId)
-        }
-    });
 }
 
 
@@ -170,8 +167,11 @@ function authenticate() {
     const cancelButton = document.getElementById('cancelButton');
     const authForm = document.getElementById('authForm');
 
+    const cookieStorage = new CookieStorage();
+
     // Use demo data if the user cancels the dialog
     cancelButton.addEventListener('click', () => {
+        cookieStorage.remove('mpilhlt_neo4j_credentials');
         authDialog.close();
         initWithDemoData();
     });
@@ -186,12 +186,7 @@ function authenticate() {
         const password = document.getElementById('password').value;
 
         // save credentials in cookies
-        const cookieStorage = new CookieStorage({
-            path: '/',
-            secure: true,
-            sameSite: 'Strict',
-            maxAge: 7 * 24 * 60 * 60 // 7 days
-        });
+
         cookieStorage.set('mpilhlt_neo4j_credentials', {
             endpoint,
             database,
