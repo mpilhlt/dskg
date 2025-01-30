@@ -1,11 +1,13 @@
 // external libraries
-import neo4j from './js/neo4j-web@5.27-esm.js';
-import cytoscape from './js/cytoscape@3.31-esm.js';
-import { CookieStorage, UrlHash } from './js/utils.js'
+import neo4j from './lib/neo4j-web@5.27-esm.js';
+import cytoscape from './lib/cytoscape@3.31-esm.js';
+import cola from './lib/cytoscape-cola@2.5.1.js'
+import { CookieStorage, UrlHash } from './lib/utils.js'
 
 // app configuration
+cytoscape.use(cola);
 import { cytoscape_style } from './config/cytoscape-style.js'
-import { cytoscape_layout } from './config/cytoscape-layout.js'
+import { cytoscape_layout } from './config/cola-layout.js'
 import { demo_data } from './demo/demodata.js';
 
 // global vars
@@ -23,6 +25,8 @@ function main() {
     } else {
         initWithDemoData();
     }
+
+    document.getElementById('loginButton').addEventListener('click', authenticate);
 }
 
 async function initWithLiveData() {
@@ -53,7 +57,7 @@ function init(data){
     initGraph(data);
     addVirtualNodes();
     const nodeId = UrlHash.get("nodeId")
-    if (nodeId) {
+    if (nodeId && cy.$id(nodeId).length > 0) {
         showRadial(nodeId)
     } else if (UrlHash.has("all")) {
         cy.layout(cytoscape_layout).run();

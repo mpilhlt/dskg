@@ -4,6 +4,3 @@ This repo contains code relating to the Digital Services Knowledge Graph project
 
 A prototype of the planned web application is [here](https://mpilhlt.github.io/dskg).
 
-
-
-
