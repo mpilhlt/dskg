@@ -16,7 +16,7 @@ export const cytoscape_layout = {
     // Whether to enable incremental mode
     randomize: true,
     // Node repulsion (non overlapping) multiplier
-    nodeRepulsion: 4500,
+    nodeRepulsion: 6500,
     // Ideal (intra-graph) edge length
     idealEdgeLength: 50,
     // Divisor to compute edge forces

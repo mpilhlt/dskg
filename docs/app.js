@@ -1,16 +1,12 @@
-// // Import Cytoscape and its plugins
-// import cytoscape from './js/cytoscape.js';
-// import coseBilkent from './js/cytoscape-cose-bilkent.js';
+// external libraries
+import neo4j from './js/neo4j-web@5.27-esm.js';
+import cytoscape from './js/cytoscape@3.31-esm.js';
+import { CookieStorage, UrlHash } from './js/utils.js'
 
-// // Import other libraries
-// import * as d3 from './js/d3.js'; // Needed?
-// import neo4j from './js/neo4j-driver.js';
-
-
-import { CookieStorage, UrlHash } from './utils.js'
-import { cytoscape_style } from './cytoscape-style.js'
-import { cytoscape_layout } from './cytoscape-layout.js'
-import { demo_data } from '../demo/demodata.js';
+// app configuration
+import { cytoscape_style } from './config/cytoscape-style.js'
+import { cytoscape_layout } from './config/cytoscape-layout.js'
+import { demo_data } from './demo/demodata.js';
 
 // global vars
 let cy;
