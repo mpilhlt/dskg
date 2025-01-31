@@ -116,9 +116,11 @@ export class UrlHash {
      * @param {string} key - The key of the hash parameter to remove.
      */
     static remove(key) {
+        if (!UrlHash.has(key)) return; // Do nothing if the key does not exist
         const hash = new URLSearchParams(window.location.hash.slice(1));
         hash.delete(key); // Remove the specified key
         const updatedHash = hash.toString();
         window.location.hash = updatedHash ? updatedHash : ''; // Update the hash or clear it
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
     }
 }

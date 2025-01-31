@@ -1,29 +1,30 @@
 // external libraries
 import neo4j from './lib/neo4j-driver@5.27.0.mjs';
 import cytoscape from './lib/cytoscape@3.31.0.mjs';
-import cola from './lib/cytoscape-cola@2.5.1.mjs';
+import cytoscape_cola from './lib/cytoscape-cola@2.5.1.mjs';
+import cytoscape_popper from './lib/cytoscape-popper@2.0.0.mjs'
 import { CookieStorage, UrlHash } from './lib/browser-utils.js';
 import cytoscape_layout from './config/layout-cola.js';
 import cytoscape_style from './config/cytoscape-style.js';
 import { demo_data } from './demo/demodata.js';
 
 // app configuration
-cytoscape.use(cola);
+cytoscape.use(cytoscape_cola);
+cytoscape.use(cytoscape_popper);
 
 // global vars
 let cy;
 
 // run app
-main();
-
-function main() {
+(async () => {
     if ((new CookieStorage()).get("mpilhlt_neo4j_credentials")) {
-        initWithLiveData();
+        await initWithLiveData();
     } else {
-        initWithDemoData();
+        await initWithDemoData();
     }
 
-    document.getElementById('loginButton').addEventListener('click', authenticate);
+    // login to the Neo4J database
+    document.getElementById('login-button').addEventListener('click', authenticate);
 
     // Add a listener for center node changes
     window.addEventListener('hashchange', () => {
@@ -32,7 +33,10 @@ function main() {
             showRadial(nodeId)
         }
     });
-}
+
+    // Configure what happens when the user interacts with the graph
+    setupNodeBehavior()
+})();
 
 async function initWithLiveData() {
     const credentials = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
@@ -46,6 +50,10 @@ async function initWithLiveData() {
 }
 
 function initWithDemoData() {
+    demo_data.forEach(node => { 
+        node.data.description = "Description for " + node.data.label;
+        node.data.url = node.data.url || "https://example.com/" + node.data.id;
+    });
     init(demo_data);
 }
 
@@ -58,7 +66,7 @@ function showUserMessage(title, message) {
 }
 
 // Show the graph
-function init(data){
+function init(data) {
     initGraph(data);
     addVirtualNodes();
     const nodeId = UrlHash.get("nodeId")
@@ -73,42 +81,95 @@ function init(data){
 
 // Initialize Cytoscape graph
 function initGraph(data) {
-    // configure graph
     cy = cytoscape({
         container: document.getElementById('cy'),
         elements: data,
         style: cytoscape_style
     });
+}
 
-    let previewWindow = null;
+function showNodeInfo(node) {   
+    const node_info_area = document.getElementById('node-info');
+    const title_elem = node_info_area.getElementsByClassName('node-info-title')[0];
+    const content_elem = node_info_area.getElementsByClassName('node-info-content')[0];
 
-    // user clicks on node
-    cy.on('tap', 'node', (event) => {
-        const node = event.target; // Directly get the tapped node
-        const nodeId = node.id();
-        const nodeData = node.data(); // Access node's data properties
+    if (node.data("type") === "Virtual" || node === cy) {
+        node_info_area.style.display = "none";
+        return
+    }
+    // title
+    title_elem.innerHTML = node.data("label");
     
-        if (nodeData.type == 'Resource' && nodeData.url) {
-            // Check if the preview window already exists and is open
-            if (!previewWindow || previewWindow.closed) {
-                // Open a new window if not already open
-                previewWindow = window.open(nodeData.url, '_blank');
-            } else {
-                // If the window is already open, just focus on it and update the URL
-                previewWindow.location.href = nodeData.url;
-                previewWindow.focus();
-            }
-        } else {
-            // Update URL hash and potentially update the graph
-            UrlHash.set('nodeId', nodeId);
-        }
-    });
+    // content
+    let content = '';
+    content += `<p>${node.data("description")}</p>`;
+    const url = node.data("url");
+    if (url) {
+        const hostname = new URL(url).hostname;
+        content += `<p><a href="${url}" target="_blank">More information on ${hostname}</a></p>`;
+    }
+    // Instructions for navigation
+    content += `<p>Long-tap or double-click on a node to navigate...</p>`;
+    content_elem.innerHTML = content;
+    node_info_area.style.display = "block";
+}
 
+function hideNodeInfo() {
+    const node_info_area = document.getElementById('node-info');
+    node_info_area.style.display = "block";
+}
+
+function setupNodeBehavior() {
+
+    // navigation by long-tapping on a node
+    const navigate_handler = (event) => {
+        hideNodeInfo()
+        // Update URL hash and potentially update the graph
+        UrlHash.set('nodeId', event.target.id());
+    };
+    // show node info on tap
+    const show_node_info_handler = (event) => {  
+        showNodeInfo(event.target);
+    };
+
+    // attach handlers
+    cy.on('tap', 'node', show_node_info_handler);
+    cy.on('taphold', 'node', navigate_handler);
+    cy.on('dbltap', 'node', navigate_handler);
 }
 
 
+function addVirtualNodes() {
+    const types = new Set(cy.nodes(`[type]`).map(node => node.data('type')))
+    for (let type of types) {
+        const id = `${type}s`;
+        if (cy.$id(id).length == 0) {
+            // Add a virtual node with the label of the type 
+            const virtualNode = cy.add({
+                data: {
+                    id,
+                    label: type + 's',
+                    type: 'Virtual',
+                    description: 'This is a virtual node representing all ' + type + 's.'
+                }
+            });
+            // Link all nodes of that type to the virtual node
+            cy.nodes(`[type="${type}"]`).forEach(node => {
+                cy.add({
+                    data: {
+                        id: `edge-${id}-${node.id()}`,
+                        source: id,
+                        target: node.id()
+                    }
+                });
+            });
+        }
+    }
+}
+
 // Function to show a radial network for a selected node
 function showRadial(nodeId) {
+
     const node = cy.$(`#${nodeId}`);
 
     if (!node || node.empty()) {
@@ -133,38 +194,13 @@ function showRadial(nodeId) {
     cy.layout(cytoscape_layout).run();
 }
 
-function addVirtualNodes() {
-    const types = new Set(cy.nodes(`[type]`).map(node => node.data('type')))
-    for (let type of types){
-        const id = `${type}s`;
-        if (cy.$id(id).length == 0) {
-            // Add a virtual node with the label of the type 
-            const virtualNode = cy.add({
-                data: {
-                    id,
-                    label: type + 's',
-                    type: 'Virtual'
-                }
-            });
-            // Link all nodes of that type to the virtual node
-            cy.nodes(`[type="${type}"]`).forEach(node => {
-                cy.add({
-                    data: {
-                        id: `edge-${id}-${node.id()}`,
-                        source: id,
-                        target: node.id()
-                    }
-                });
-            });
-        }
-    }
-}
+
 
 
 // Neo4J authentication
 function authenticate() {
-    const authDialog = document.getElementById('authDialog');
-    const cancelButton = document.getElementById('cancelButton');
+    const authDialog = document.getElementById('authentication-dialog');
+    const cancelButton = authDialog.getElementsByClassName('cancel-button')[0];
     const authForm = document.getElementById('authForm');
 
     const cookieStorage = new CookieStorage();
@@ -227,6 +263,7 @@ async function fetchGraph(endpoint, database, username, password) {
         if (node.properties.URL) {
             data.url = node.properties.URL;
         }
+        data.description = node.properties.description || '';
         return { data };
     });
     const edges = edge_result.records.map((record) => {

@@ -1,0 +1,89 @@
+html,
+body {
+    font-family: 'Roboto', sans-serif;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 250px;
+    grid-template-areas:
+        "title menu"
+        "main info";
+}
+
+#title {
+    grid-area: title;
+    background: lightgray;
+    padding: 10px;
+    white-space: nowrap;
+    text-align: center;
+    font-weight: bold;
+    align-content: center;
+    font-size: larger;
+}
+
+#menu {
+    grid-area: menu;
+    display: flex;
+    justify-content: flex-end;
+    /* Aligns items to the right */
+    background: lightgray;
+    padding: 10px;
+}
+
+#cy {
+    grid-area: main;
+    background: white;
+    padding: 10px;
+    overflow: hidden;
+}
+
+#node-info {
+    grid-area: info;
+    background-color: #f9f9f9;
+    border-left: 1px solid #ccc;
+    padding: 10px;
+    overflow: hidden;
+    display: none;
+}
+
+.node-info-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+/* Basic styling for the dialog */
+dialog {
+    font: 1em sans-serif;
+    border: none;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.dialog-header {
+    font-size: 1.2em;
+    margin-bottom: 10px;
+}
+
+.dialog-footer {
+    margin-top: 15px;
+    text-align: right;
+}
+
+input {
+    display: block;
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+button {
+    padding: 8px 12px;
+    margin-left: 5px;
+    white-space: nowrap;
+}
