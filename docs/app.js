@@ -93,10 +93,6 @@ function showNodeInfo(node) {
     const title_elem = node_info_area.getElementsByClassName('node-info-title')[0];
     const content_elem = node_info_area.getElementsByClassName('node-info-content')[0];
 
-    if (node.data("type") === "Virtual" || node === cy) {
-        node_info_area.style.display = "none";
-        return
-    }
     // title
     title_elem.innerHTML = node.data("label");
     
@@ -116,7 +112,7 @@ function showNodeInfo(node) {
 
 function hideNodeInfo() {
     const node_info_area = document.getElementById('node-info');
-    node_info_area.style.display = "block";
+    node_info_area.style.display = "none";
 }
 
 function setupNodeBehavior() {
@@ -127,13 +123,19 @@ function setupNodeBehavior() {
         // Update URL hash and potentially update the graph
         UrlHash.set('nodeId', event.target.id());
     };
+
     // show node info on tap
-    const show_node_info_handler = (event) => {  
-        showNodeInfo(event.target);
+    const tap_handler = (event) => {  
+        const node = event.target;
+        if (node.data('type') === 'Virtual') {
+            navigate_handler(event);
+        } else{
+            showNodeInfo(node);
+        }
     };
 
     // attach handlers
-    cy.on('tap', 'node', show_node_info_handler);
+    cy.on('tap', 'node', tap_handler);
     cy.on('taphold', 'node', navigate_handler);
     cy.on('dbltap', 'node', navigate_handler);
 }
