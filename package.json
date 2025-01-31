@@ -7,7 +7,9 @@
       "postinstall": "npm run build"
     },
     "dependencies": {
-      "cytoscape-cola": "^2.2.3"
+      "cytoscape-cola": "^2.2.3",
+      "cytoscape-popper": "^2.0.0",
+      "neo4j-driver": "^5.27.0"
     },
     "devDependencies": {
       "esbuild": "^0.19.0"

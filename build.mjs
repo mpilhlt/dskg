@@ -1,22 +1,46 @@
+import { promises as fs } from "fs";
 import esbuild from "esbuild";
-import { readFile } from "fs/promises";
+import path from "path";
 
-// Read the version from `cytoscape-cola`'s package.json
-const packageJsonPath = "./node_modules/cytoscape-cola/package.json";
-const packageJson = JSON.parse(await readFile(packageJsonPath, "utf-8"));
-const colaVersion = packageJson.version;
+const modules = [
+  "cytoscape",
+  "cytoscape-cola",
+  "neo4j-driver",
+  "@popperjs/core",
+  "cytoscape-popper"
+];
 
-// Generate the output filename dynamically
-const outputFile = `docs/lib/cytoscape-cola@${colaVersion}.js`;
+for (const module of modules) {
+  // Construct the package.json path
+  const packageJsonPath = path.resolve(`./node_modules/${module}/package.json`);
 
-await esbuild.build({
-  entryPoints: ["./node_modules/cytoscape-cola/cytoscape-cola.js"],
-  outfile: outputFile,
-  format: "esm",
-  bundle: true,
-  globalName: "cola",
-  platform: "browser",
-  external: ["cytoscape"]
-});
+  try {
+    // Read and parse package.json
+    const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf-8"));
+    const version = packageJson.version;
 
-console.log(`✅ Transpilation complete: ${outputFile}`);
+    // Determine the entry point (favoring "module" over "main" for ESM compatibility)
+    const entryPoint = packageJson.module || packageJson.main;
+    if (!entryPoint) {
+      console.warn(`No entry point found for ${module}, skipping.`);
+      continue;
+    }
+
+    const resolvedEntry = path.resolve(`./node_modules/${module}/${entryPoint}`);
+    const outputFile = `docs/lib/${module}@${version}.mjs`;
+
+    // Build the module using esbuild
+    await esbuild.build({
+      entryPoints: [resolvedEntry],
+      outfile: outputFile,
+      format: "esm",
+      bundle: true,
+      platform: "browser",
+      external: ["cytoscape"]
+    });
+
+    console.log(`Built ${module} -> ${outputFile}`);
+  } catch (error) {
+    console.error(`Failed to process ${module}:`, error.message);
+  }
+}

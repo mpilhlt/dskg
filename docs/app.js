@@ -1,14 +1,14 @@
 // external libraries
-import neo4j from './lib/neo4j-web@5.27-esm.js';
-import cytoscape from './lib/cytoscape@3.31-esm.js';
-import cola from './lib/cytoscape-cola@2.5.1.js'
-import { CookieStorage, UrlHash } from './lib/utils.js'
+import neo4j from './lib/neo4j-driver@5.27.0.mjs';
+import cytoscape from './lib/cytoscape@3.31.0.mjs';
+import cola from './lib/cytoscape-cola@2.5.1.mjs';
+import { CookieStorage, UrlHash } from './lib/browser-utils.js';
+import cytoscape_layout from './config/layout-cola.js';
+import cytoscape_style from './config/cytoscape-style.js';
+import { demo_data } from './demo/demodata.js';
 
 // app configuration
 cytoscape.use(cola);
-import { cytoscape_style } from './config/cytoscape-style.js'
-import { cytoscape_layout } from './config/cola-layout.js'
-import { demo_data } from './demo/demodata.js';
 
 // global vars
 let cy;

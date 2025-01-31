@@ -1,25 +1,25 @@
-export const cytoscape_style = [
+export default [
     {
         // default node style
         selector: 'node',
         style: {
-            
-            'width': 60, 
-            'height': 60,                    
+
+            'width': 60,
+            'height': 60,
             'label': 'data(label)',
             'text-valign': 'center',
             'text-halign': 'center',
-            
+
             'color': '#000000', // Default text color: black
-            'font-size': 8, 
+            'font-size': 8,
             'text-wrap': 'wrap',
             'text-max-width': '60px',
-            'min-zoomed-font-size': 6                    
+            'min-zoomed-font-size': 6
         }
     },
     {
         // Style for nodes which have a background image
-        selector: 'node[background_url]', 
+        selector: 'node[background_url]',
         style: {
             'background-image': el => `url(${el.data('background_url')})`,
             'background-image-crossorigin': 'null',
@@ -40,10 +40,10 @@ export const cytoscape_style = [
     {
         selector: 'node[type="Task"]',
         style: {
-            'shape': 'ellipse', 
+            'shape': 'ellipse',
             'background-color': '#6495ED',
         }
-    },  
+    },
     {
         selector: 'node[type="Tool"]',
         style: {
@@ -51,7 +51,7 @@ export const cytoscape_style = [
             'background-color': '#b43a3a',
             'height': 40
         }
-    }, 
+    },
     {
         selector: 'node[type="Resource"]',
         style: {
@@ -67,7 +67,7 @@ export const cytoscape_style = [
             'background-color': '#999494',
             'height': 40
         }
-    },               
+    },
     {
         selector: 'edge',
         style: {
