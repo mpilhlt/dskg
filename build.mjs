@@ -36,7 +36,7 @@ for (const module of modules) {
       format: "esm",
       bundle: true,
       platform: "browser",
-      external: ["cytoscape"]
+      external: [module]
     });
 
     console.log(`Built ${module} -> ${outputFile}`);
