@@ -19,22 +19,23 @@ export default [
     },
     {
         // Style for nodes which have a background image
-        selector: 'node[background_url]',
+        selector: 'node[image_url]',
         style: {
-            'background-image': el => `url(${el.data('background_url')})`,
+            'background-image': el => `url(${el.data('image_url')})`,
             'background-image-crossorigin': 'null',
             'background-fit': 'cover', // Adjust to fit the node
             'color': '#ffffff', // Text color: white
+            'text-outline-width': 1,
         }
     },
     {
-        selector: 'node[type="Virtual"]',
+        selector: 'node[type="Type"]',
         style: {
             'label': 'data(label)',
             'shape': 'rectangle',
             'background-color': '#f0f0f0',
             'width': '60px',
-            'height': '30px',
+            'height': '60px',
         }
     },
     {

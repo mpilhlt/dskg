@@ -68,7 +68,7 @@ function showUserMessage(title, message) {
 // Show the graph
 function init(data) {
     initGraph(data);
-    addVirtualNodes();
+    addTypeNodes();
     const nodeId = UrlHash.get("nodeId")
     if (nodeId && cy.$id(nodeId).length > 0) {
         showRadial(nodeId)
@@ -96,14 +96,22 @@ function showNodeInfo(node) {
     // title
     title_elem.innerHTML = node.data("label");
     
-    // content
+    // description
     let content = '';
     content += `<p>${node.data("description")}</p>`;
     const url = node.data("url");
+
+    // url link
     if (url) {
         const hostname = new URL(url).hostname;
         content += `<p><a href="${url}" target="_blank">More information on ${hostname}</a></p>`;
     }
+
+    // image
+    if (node.data("image_url")) {
+        content += `<img src="${node.data("image_url")}" alt="Image for ${node.data("label")}" class="node-info-image">`;      
+    }
+
     // Instructions for navigation
     content += `<p>Long-tap or double-click on a node to navigate...</p>`;
     content_elem.innerHTML = content;
@@ -127,11 +135,11 @@ function setupNodeBehavior() {
     // show node info on tap
     const tap_handler = (event) => {  
         const node = event.target;
-        if (node.data('type') === 'Virtual') {
+        if (node.data('type') === 'Type') {
             navigate_handler(event);
-        } else{
-            showNodeInfo(node);
-        }
+        } 
+        showNodeInfo(node);
+        
     };
 
     // attach handlers
@@ -141,31 +149,37 @@ function setupNodeBehavior() {
 }
 
 
-function addVirtualNodes() {
+function addTypeNodes() {
     const types = new Set(cy.nodes(`[type]`).map(node => node.data('type')))
     for (let type of types) {
+        if (type === 'Type') {
+            continue;
+        }
+        let typeNode;
         const id = `${type}s`;
-        if (cy.$id(id).length == 0) {
-            // Add a virtual node with the label of the type 
-            const virtualNode = cy.add({
+        typeNode = cy.$id(id);
+        // do not add if it already exists, so we can pre-define type nodes
+        if (typeNode.length == 0) { 
+            // Add a type node with the label of the type 
+            typeNode = cy.add({
                 data: {
                     id,
                     label: type + 's',
-                    type: 'Virtual',
-                    description: 'This is a virtual node representing all ' + type + 's.'
+                    type: 'Type',
+                    description: 'This is a node grouping all ' + type + 's.'
                 }
             });
-            // Link all nodes of that type to the virtual node
-            cy.nodes(`[type="${type}"]`).forEach(node => {
-                cy.add({
-                    data: {
-                        id: `edge-${id}-${node.id()}`,
-                        source: id,
-                        target: node.id()
-                    }
-                });
-            });
         }
+        // Link all nodes of that type to the type node
+        cy.nodes(`[type="${type}"]`).forEach(node => {
+            cy.add({
+                data: {
+                    id: `edge-${id}-${node.id()}`,
+                    source: id,
+                    target: node.id()
+                }
+            });
+        });
     }
 }
 
@@ -195,8 +209,6 @@ function showRadial(nodeId) {
     // Apply a concentric layout with the node at the center
     cy.layout(cytoscape_layout).run();
 }
-
-
 
 
 // Neo4J authentication
@@ -260,7 +272,7 @@ async function fetchGraph(endpoint, database, username, password) {
         const label = node.properties.name;
         const data = { id, label, type };
         if (node.properties.image_url) {
-            data.background_url = node.properties.image_url;
+            data.image_url = node.properties.image_url;
         }
         if (node.properties.URL) {
             data.url = node.properties.URL;

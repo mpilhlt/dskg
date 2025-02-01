@@ -54,6 +54,16 @@ body {
     margin-bottom: 5px;
 }
 
+.node-info-content {
+    margin-bottom: 10px;
+}
+
+.node-info-image {
+    width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
 /* Basic styling for the dialog */
 dialog {
     font: 1em sans-serif;
