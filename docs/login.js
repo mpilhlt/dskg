@@ -1,3 +1,5 @@
+import { CookieStorage } from "./lib/browser-utils.js";
+
 
 const login_button = document.getElementById('login-button');
 login_button.addEventListener('click', authenticate);
@@ -20,9 +22,7 @@ export function authenticate() {
 
     // Use demo data if the user cancels the dialog
     cancelButton.addEventListener('click', () => {
-        cookieStorage.remove('mpilhlt_neo4j_credentials');
         authDialog.close();
-        initWithDemoData();
     });
 
     // Handle form submission
@@ -42,8 +42,7 @@ export function authenticate() {
             password: btoa(password)
         });
 
-        // show graph
-        initWithLiveData();
+        document.location.reload();
     });
     authDialog.showModal();
 

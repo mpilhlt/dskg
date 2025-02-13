@@ -7,7 +7,7 @@ import { CookieStorage, UrlHash } from './lib/browser-utils.js';
 import cytoscape_layout from './config/layout-cola.js';
 import cytoscape_style from './config/cytoscape-style.js';
 
-import {setupLogin, authenticate, showUserMessage} from './login.js';
+import {setupLogin} from './login.js';
 
 
 // app configuration
@@ -69,7 +69,6 @@ let cy;
             showRadial(nodeId)
         }
     });
-
 })();
 
 
