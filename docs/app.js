@@ -2,81 +2,86 @@
 import neo4j from './lib/neo4j-driver@5.27.0.mjs';
 import cytoscape from './lib/cytoscape@3.31.0.mjs';
 import cytoscape_cola from './lib/cytoscape-cola@2.5.1.mjs';
-import cytoscape_popper from './lib/cytoscape-popper@2.0.0.mjs'
+//import cytoscape_popper from './lib/cytoscape-popper@2.0.0.mjs'
 import { CookieStorage, UrlHash } from './lib/browser-utils.js';
 import cytoscape_layout from './config/layout-cola.js';
 import cytoscape_style from './config/cytoscape-style.js';
-import { demo_data } from './demo/demodata.js';
+
+import {setupLogin, authenticate, showUserMessage} from './login.js';
+
 
 // app configuration
 cytoscape.use(cytoscape_cola);
-cytoscape.use(cytoscape_popper);
+//cytoscape.use(cytoscape_popper); // not used yet
 
 // global vars
 let cy;
 
 // run app
 (async () => {
-    if ((new CookieStorage()).get("mpilhlt_neo4j_credentials")) {
-        await initWithLiveData();
-    } else {
-        await initWithDemoData();
+
+    // get data from neo4j or demo json
+    let graph_data;
+    try {
+        let credentials;
+        if ((new CookieStorage()).get("mpilhlt_neo4j_credentials")) {
+            credentials = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
+        } else {
+            const res = await fetch('../neo4j.json');
+            credentials = await res.json();
+        } 
+        setupLogin(false);
+        const {endpoint, database, username, password} = credentials
+        graph_data = await fetchGraph(endpoint, database, username, password);
+    } catch (error) {
+        // a SyntaxError is thrown when the JSON file is not found and a 404 error is returned, 
+        // which cannot be parsed as JSON. We ignore this error in this case and output it otherwise.
+        if (!(error instanceof SyntaxError)) {
+            console.error('Could not retrieve data from Neo4j: ' + error.message);
+        }
+        // we assume that we're in a non-safe environment and don't allow to log in or to store credentials
+        setupLogin(true);
+        (new CookieStorage()).remove("mpilhlt_neo4j_credentials");
+        graph_data = await getDemoData();
     }
 
-    // login to the Neo4J database
-    document.getElementById('login-button').addEventListener('click', authenticate);
+    // initialize the graph
+    initGraph(graph_data);
+    addTypeNodes();
+
+    // show individual node if in the URL hash or the task grid
+    const nodeId = UrlHash.get("nodeId")
+    if (nodeId && nodeId !== "Tasks" && cy.$id(nodeId).length > 0) {
+        showRadial(nodeId)
+    } else {
+        showNodeGrid('[type="Task"]');
+    }
+
+    // Configure what happens when the user interacts with the graph
+    setupNodeBehavior();
 
     // Add a listener for center node changes
     window.addEventListener('hashchange', () => {
         const nodeId = UrlHash.get('nodeId');
-        if (nodeId) {
+        if (nodeId=="Tasks") {
+            showNodeGrid('[type="Task"]');
+        } else if (nodeId) {
             showRadial(nodeId)
         }
     });
 
-    // Configure what happens when the user interacts with the graph
-    setupNodeBehavior()
 })();
 
-async function initWithLiveData() {
-    const credentials = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
-    let data;
-    try {
-        data = await fetchGraph(credentials.endpoint, credentials.database, credentials.username, atob(credentials.password));
-    } catch (error) {
-        showUserMessage('Error', 'Failed to fetch data from Neo4J: ' + error.message);
-    }
-    init(data);
-}
 
-function initWithDemoData() {
-    demo_data.forEach(node => { 
+// fetch demo data from local json file
+async function getDemoData() {
+    console.log('Using demo data');
+    const demo_data = (await import('./demo/demodata.js')).default;
+    demo_data.forEach(node => {
         node.data.description = "Description for " + node.data.label;
         node.data.url = node.data.url || "https://example.com/" + node.data.id;
     });
-    init(demo_data);
-}
-
-// Non-blocking alert()
-function showUserMessage(title, message) {
-    const userMessage = document.getElementById('userMessage');
-    userMessage.showModal();
-    userMessage.querySelector('.dialog-header').textContent = title;
-    userMessage.querySelector('.dialog-content').textContent = message;
-}
-
-// Show the graph
-function init(data) {
-    initGraph(data);
-    addTypeNodes();
-    const nodeId = UrlHash.get("nodeId")
-    if (nodeId && cy.$id(nodeId).length > 0) {
-        showRadial(nodeId)
-    } else if (UrlHash.has("all")) {
-        cy.layout(cytoscape_layout).run();
-    } else {
-        showRadial('Tasks');
-    }
+    return demo_data;
 }
 
 // Initialize Cytoscape graph
@@ -88,14 +93,14 @@ function initGraph(data) {
     });
 }
 
-function showNodeInfo(node) {   
+function showNodeInfo(node) {
     const node_info_area = document.getElementById('node-info');
     const title_elem = node_info_area.getElementsByClassName('node-info-title')[0];
     const content_elem = node_info_area.getElementsByClassName('node-info-content')[0];
 
     // title
     title_elem.innerHTML = node.data("label");
-    
+
     // description
     let content = '';
     content += `<p>${node.data("description")}</p>`;
@@ -109,7 +114,7 @@ function showNodeInfo(node) {
 
     // image
     if (node.data("image_url")) {
-        content += `<img src="${node.data("image_url")}" alt="Image for ${node.data("label")}" class="node-info-image">`;      
+        content += `<img src="${node.data("image_url")}" alt="Image for ${node.data("label")}" class="node-info-image">`;
     }
 
     // Instructions for navigation
@@ -124,7 +129,6 @@ function hideNodeInfo() {
 }
 
 function setupNodeBehavior() {
-
     // navigation by long-tapping on a node
     const navigate_handler = (event) => {
         hideNodeInfo()
@@ -133,13 +137,13 @@ function setupNodeBehavior() {
     };
 
     // show node info on tap
-    const tap_handler = (event) => {  
+    const tap_handler = (event) => {
         const node = event.target;
         if (node.data('type') === 'Type') {
             navigate_handler(event);
-        } 
+        }
         showNodeInfo(node);
-        
+
     };
 
     // attach handlers
@@ -150,7 +154,9 @@ function setupNodeBehavior() {
 
 
 function addTypeNodes() {
-    const types = new Set(cy.nodes(`[type]`).map(node => node.data('type')))
+    // collect types
+    const types = new Set(cy.nodes(`[type]`).map(node => node.data('type')));
+    // add nodes and edges
     for (let type of types) {
         if (type === 'Type') {
             continue;
@@ -159,7 +165,7 @@ function addTypeNodes() {
         const id = `${type}s`;
         typeNode = cy.$id(id);
         // do not add if it already exists, so we can pre-define type nodes
-        if (typeNode.length == 0) { 
+        if (typeNode.length == 0) {
             // Add a type node with the label of the type 
             typeNode = cy.add({
                 data: {
@@ -170,7 +176,7 @@ function addTypeNodes() {
                 }
             });
         }
-        // Link all nodes of that type to the type node
+        // Link all nodes of that type to the type node, except the tasks
         cy.nodes(`[type="${type}"]`).forEach(node => {
             cy.add({
                 data: {
@@ -185,6 +191,8 @@ function addTypeNodes() {
 
 // Function to show a radial network for a selected node
 function showRadial(nodeId) {
+
+    console.log('Showing radial network for node:', nodeId);
 
     const node = cy.$(`#${nodeId}`);
 
@@ -210,45 +218,44 @@ function showRadial(nodeId) {
     cy.layout(cytoscape_layout).run();
 }
 
+// Function to show the nodes selected by the selector in a grid
+function showNodeGrid(selector) {
+    console.log('Showing node grid for selector:', selector);
+    const nodes = cy.nodes(selector);
+    
+    // sort the nodes by label
+    nodes.sort((a, b) => a.data('label').localeCompare(b.data('label')))
+        .forEach((node, index) => node.data('index', index)); 
 
-// Neo4J authentication
-function authenticate() {
-    const authDialog = document.getElementById('authentication-dialog');
-    const cancelButton = authDialog.getElementsByClassName('cancel-button')[0];
-    const authForm = document.getElementById('authForm');
-
-    const cookieStorage = new CookieStorage();
-
-    // Use demo data if the user cancels the dialog
-    cancelButton.addEventListener('click', () => {
-        cookieStorage.remove('mpilhlt_neo4j_credentials');
-        authDialog.close();
-        initWithDemoData();
-    });
-
-    // Handle form submission
-    authForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        authDialog.close();
-        const endpoint = document.getElementById('endpoint').value;
-        const database = document.getElementById('database').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-
-        // save credentials in cookies
-
-        cookieStorage.set('mpilhlt_neo4j_credentials', {
-            endpoint,
-            database,
-            username,
-            password: btoa(password)
-        });
-
-        // show graph
-        initWithLiveData();
-    });
-    authDialog.showModal();
-
+    // show only those noded
+    cy.elements().hide();
+    nodes.show();
+    
+    // Apply a grid layout to the nodes by manually placing them
+    let nodeCount = nodes.length;
+    let rows = Math.ceil(Math.sqrt(nodeCount));
+    let cols = Math.ceil(nodeCount / rows);
+    const spacing = 10; // Spacing between nodes
+    const nodeWidth = 60; // Width of each node
+    const nodeHeight = 60; // Height of each node
+    
+    nodes.forEach((node) => {
+        let index = node.data('index'); // Access the index assigned earlier
+        let col = index % cols;
+        let row = Math.floor(index / cols);
+        
+        // Calculate positions based on node dimensions and spacing
+        let xPos = col * (nodeWidth + spacing);
+        let yPos = row * (nodeHeight + spacing);
+      
+        // Set the position of each node
+        node.position({ x: xPos, y: yPos });
+      });
+      
+      // Optionally fit the layout to viewport
+      cy.fit(cy.nodes(), 50); // Add padding of 50 (can adjust as needed)
+      
+    
 }
 
 // fetches graph data from Neo4J

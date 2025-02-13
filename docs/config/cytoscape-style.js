@@ -32,23 +32,23 @@ export default [
         selector: 'node[type="Type"]',
         style: {
             'label': 'data(label)',
-            'shape': 'rectangle',
+            'shape': 'round-rectangle',
             'background-color': '#f0f0f0',
             'width': '60px',
-            'height': '60px',
+            'height': '40px',
         }
     },
     {
         selector: 'node[type="Task"]',
         style: {
-            'shape': 'ellipse',
+            'shape': 'round-rectangle',
             'background-color': '#6495ED',
         }
     },
     {
         selector: 'node[type="Tool"]',
         style: {
-            'shape': 'round-rectangle',
+            'shape': 'ellipsis',
             'background-color': '#b43a3a',
             'height': 40
         }
