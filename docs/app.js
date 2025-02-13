@@ -47,29 +47,55 @@ let cy;
 
     // initialize the graph
     initGraph(graph_data);
-    addTypeNodes();
-
-    // show individual node if in the URL hash or the task grid
-    const nodeId = UrlHash.get("nodeId")
-    if (nodeId && nodeId !== "Tasks" && cy.$id(nodeId).length > 0) {
-        showRadial(nodeId)
-    } else {
-        showNodeGrid('[type="Task"]');
-    }
 
     // Configure what happens when the user interacts with the graph
     setupNodeBehavior();
 
     // Add a listener for center node changes
-    window.addEventListener('hashchange', () => {
-        const nodeId = UrlHash.get('nodeId');
-        if (nodeId=="Tasks") {
-            showNodeGrid('[type="Task"]');
-        } else if (nodeId) {
-            showRadial(nodeId)
-        }
-    });
+    window.addEventListener('hashchange', updateView);
+        
+    // add button actions
+    document.getElementById('task-button').addEventListener('click', () =>  UrlHash.set('view', 'Task'));
+    document.getElementById('people-button').addEventListener('click', () =>  UrlHash.set('view', 'Person'));
+    document.getElementById('tool-button').addEventListener('click', () =>  UrlHash.set('view', 'Tool'));
+
+    // show grid or radial view
+    updateView();
 })();
+
+function updateView() {   
+    const view = UrlHash.get('view') || UrlHash.get('nodeId') || 'Task';
+    switch (view) {     
+        case 'Task':
+        case 'Person':
+        case 'Tool':
+            showNodeGrid(`[type="${view}"]`);
+            break;
+        default:
+            showRadial(view)
+    }
+    UrlHash.remove('nodeId');
+}
+
+function setupNodeBehavior() {
+    // navigation by long-tapping on a node
+    const navigate_handler = (event) => {
+        hideNodeInfo()
+        // Update URL hash and potentially update the graph
+        UrlHash.set('view', event.target.id());
+    };
+
+    // show node info on tap
+    const tap_handler = (event) => {
+        const node = event.target;
+        showNodeInfo(node);
+    };
+
+    // attach handlers
+    cy.on('tap', 'node', tap_handler);
+    cy.on('taphold', 'node', navigate_handler);
+    cy.on('dbltap', 'node', navigate_handler);
+}
 
 
 // fetch demo data from local json file
@@ -127,73 +153,13 @@ function hideNodeInfo() {
     node_info_area.style.display = "none";
 }
 
-function setupNodeBehavior() {
-    // navigation by long-tapping on a node
-    const navigate_handler = (event) => {
-        hideNodeInfo()
-        // Update URL hash and potentially update the graph
-        UrlHash.set('nodeId', event.target.id());
-    };
-
-    // show node info on tap
-    const tap_handler = (event) => {
-        const node = event.target;
-        if (node.data('type') === 'Type') {
-            navigate_handler(event);
-        }
-        showNodeInfo(node);
-
-    };
-
-    // attach handlers
-    cy.on('tap', 'node', tap_handler);
-    cy.on('taphold', 'node', navigate_handler);
-    cy.on('dbltap', 'node', navigate_handler);
-}
-
-
-function addTypeNodes() {
-    // collect types
-    const types = new Set(cy.nodes(`[type]`).map(node => node.data('type')));
-    // add nodes and edges
-    for (let type of types) {
-        if (type === 'Type') {
-            continue;
-        }
-        let typeNode;
-        const id = `${type}s`;
-        typeNode = cy.$id(id);
-        // do not add if it already exists, so we can pre-define type nodes
-        if (typeNode.length == 0) {
-            // Add a type node with the label of the type 
-            typeNode = cy.add({
-                data: {
-                    id,
-                    label: type + 's',
-                    type: 'Type',
-                    description: 'This is a node grouping all ' + type + 's.'
-                }
-            });
-        }
-        // Link all nodes of that type to the type node, except the tasks
-        cy.nodes(`[type="${type}"]`).forEach(node => {
-            cy.add({
-                data: {
-                    id: `edge-${id}-${node.id()}`,
-                    source: id,
-                    target: node.id()
-                }
-            });
-        });
-    }
-}
-
 // Function to show a radial network for a selected node
 function showRadial(nodeId) {
 
     console.log('Showing radial network for node:', nodeId);
 
     const node = cy.$(`#${nodeId}`);
+    node.unlock();
 
     if (!node || node.empty()) {
         console.error(`Node with ID ${nodeId} does not exist.`);
@@ -252,8 +218,9 @@ function showNodeGrid(selector) {
       });
       
       // Optionally fit the layout to viewport
-      cy.fit(cy.nodes(), 50); // Add padding of 50 (can adjust as needed)
-      
+      cy.fit(cy.nodes(), 50); // Add padding of 50 (can adjust as needed)4
+      cy.layout({ name: 'preset',  randomize: false }).run();
+      nodes.lock()
     
 }
 

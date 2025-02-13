@@ -48,7 +48,7 @@ export default [
     {
         selector: 'node[type="Tool"]',
         style: {
-            'shape': 'ellipsis',
+            'shape': 'ellipse',
             'background-color': '#b43a3a',
             'height': 40
         }
