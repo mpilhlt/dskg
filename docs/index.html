@@ -27,20 +27,20 @@
 
   <!-- Authentication Dialog -->
   <dialog id="authentication-dialog">
-    <form method="dialog" id="authForm">
+    <form method="dialog">
       <div class="dialog-header">Please Log in (credentials will be saved in cookies).</div>
 
       <label for="endpoint">Neo4J Endpoint URL:</label>
-      <input type="text" id="endpoint" name="endpoint" required>
+      <input type="text" name="endpoint" required>
 
       <label for="endpoint">Neo4J Database name</label>
-      <input type="text" id="database" name="database" required>
+      <input type="text" name="database" required>
 
       <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required>
+      <input type="text" name="username" required>
 
       <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
+      <input type="password" name="password" required>
 
       <div class="dialog-footer">
         <button type="submit">Login</button>
@@ -48,6 +48,30 @@
       </div>
     </form>
   </dialog>
+
+    <!-- Node editor -->
+    <dialog id="node-editor">
+      <form method="dialog" id="node-form">
+        <div class="dialog-header">Please edit the node properties</div>
+  
+        <label for="label">Label:</label>
+        <input type="text" name="endpoint" required>
+  
+        <label for="endpoint">Description:</label>
+        <input type="text" name="description">
+  
+        <label for="username">URL:</label>
+        <input type="text" name="url">
+  
+        <label for="password">Image URL:</label>
+        <input type="password" name="image-url">
+  
+        <div class="dialog-footer">
+          <button type="submit">Save</button>
+          <button type="button" class="cancel-button">Cancel</button>
+        </div>
+      </form>
+    </dialog>
   
   <!-- User message -->
   <dialog id="userMessage">

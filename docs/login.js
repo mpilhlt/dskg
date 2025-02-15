@@ -14,38 +14,30 @@ export function setupLogin(allow=false) {
 
 // Neo4J authentication
 export function authenticate() {
-    const authDialog = document.getElementById('authentication-dialog');
-    const cancelButton = authDialog.getElementsByClassName('cancel-button')[0];
-    const authForm = document.getElementById('authForm');
-
-    const cookieStorage = new CookieStorage();
-
-    // Use demo data if the user cancels the dialog
-    cancelButton.addEventListener('click', () => {
-        authDialog.close();
-    });
+    const dialog = document.getElementById('authentication-dialog');
+    const form = dialog.querySelector('form');
+    
+    // Cancel button
+    dialog.querySelector('.cancel-button')
+        .addEventListener('click', () => dialog.close());
 
     // Handle form submission
-    authForm.addEventListener('submit', async (event) => {
+    form.addEventListener('submit', async (event) => {
         event.preventDefault();
-        authDialog.close();
-        const endpoint = document.getElementById('endpoint').value;
-        const database = document.getElementById('database').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-
-        // save credentials in cookies
+        dialog.close();
+        
+        // save credentials in cookies and reload the page
+        const cookieStorage = new CookieStorage();
+        const { endpoint, database, username, password } = form.elements;
         cookieStorage.set('mpilhlt_neo4j_credentials', {
-            endpoint,
-            database,
-            username,
-            password: btoa(password)
+            endpoint: endpoint.value,
+            database: database.value,
+            username: username.value,
+            password: btoa(password.value)
         });
-
         document.location.reload();
     });
-    authDialog.showModal();
-
+    dialog.showModal();
 }
 
 // Non-blocking alert()
