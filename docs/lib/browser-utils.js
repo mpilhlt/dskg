@@ -70,7 +70,6 @@
      * @param {object} [options={}] - Optional overrides for the configuration.
      */
     remove(key, options = {}) {
-        console.warn("Removing cookie")
         const { path, sameSite } = { ...this.config, ...options };
         const cookie = `${key}=; path=${path}; samesite=${sameSite}; max-age=0`;
         document.cookie = cookie;
