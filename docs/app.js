@@ -23,10 +23,8 @@ let cy;
     // get data from neo4j or demo json
     let graph_data;
     try {
-        let credentials;
-        if ((new CookieStorage()).get("mpilhlt_neo4j_credentials")) {
-            credentials = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
-        } else {
+        let credentials = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
+        if (!credentials) {
             const res = await fetch('../neo4j.json');
             credentials = await res.json();
         }
@@ -40,8 +38,9 @@ let cy;
             // credentials seem to be wrong
             console.error('Could not retrieve data from Neo4j: ' + error.message);
             (new CookieStorage()).remove("mpilhlt_neo4j_credentials");
-            graph_data = await getDemoData();
         }
+        // in any case, we load the demo data instead
+        graph_data = await getDemoData();
     }
 
     // show login button
