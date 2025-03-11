@@ -29,21 +29,23 @@ let cy;
         } else {
             const res = await fetch('../neo4j.json');
             credentials = await res.json();
-        } 
-        setupLogin(false);
-        const {endpoint, database, username, password} = credentials
-        graph_data = await fetchGraph(endpoint, database, username, password);
-    } catch (error) {
-        // a SyntaxError is thrown when the JSON file is not found and a 404 error is returned, 
-        // which cannot be parsed as JSON. We ignore this error in this case and output it otherwise.
-        if (!(error instanceof SyntaxError)) {
-            console.error('Could not retrieve data from Neo4j: ' + error.message);
         }
-        // we assume that we're in a non-safe environment and don't allow to log in or to store credentials
-        setupLogin(true);
-        (new CookieStorage()).remove("mpilhlt_neo4j_credentials");
-        graph_data = await getDemoData();
+        const {endpoint, database, username, password} = credentials
+        graph_data = await fetchGraph(endpoint, database, username, atob(password));
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            // a SyntaxError is thrown when the JSON file is not found and a 404 error is returned, 
+            // which cannot be parsed as JSON. We ignore this error in this case.
+        } else {
+            // credentials seem to be wrong
+            console.error('Could not retrieve data from Neo4j: ' + error.message);
+            (new CookieStorage()).remove("mpilhlt_neo4j_credentials");
+            graph_data = await getDemoData();
+        }
     }
+
+    // show login button
+    setupLogin(true);
 
     // initialize the graph
     initGraph(graph_data);
