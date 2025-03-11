@@ -11,7 +11,7 @@
         this.config = {
             path: config.path || '/',
             secure: config.secure !== undefined ? config.secure : true,
-            sameSite: config.sameSite || 'Secure',
+            sameSite: config.sameSite || 'Strict',
             maxAge: config.maxAge !== undefined ? config.maxAge : 7 * 24 * 60 * 60 // Default: 7 days
         };
     }
@@ -70,8 +70,10 @@
      * @param {object} [options={}] - Optional overrides for the configuration.
      */
     remove(key, options = {}) {
-        const { path } = { ...this.config, ...options };
-        document.cookie = `${key}=; path=${path}; max-age=0`;
+        console.warn("Removing cookie")
+        const { path, sameSite } = { ...this.config, ...options };
+        const cookie = `${key}=; path=${path}; samesite=${sameSite}; max-age=0`;
+        document.cookie = cookie;
     }
 }
 
