@@ -102,6 +102,11 @@ button {
     display: none;
 }
 
+#undo-button {
+    display: none;
+    font-size: xx-large;
+}
+
 .live-edit:not([data-edit])::after  {
     content: "\270E";
     margin-left: 10px;

@@ -8,7 +8,7 @@ import cytoscape_style from './config/cytoscape-style.js';
 
 // app modules
 import {setupLogin, showUserMessage} from './login.js';
-import {fetchGraph, testWriteAccess} from './neo4j.js';
+import {fetchGraph, testWriteAccess, updateProperties} from './neo4j.js';
 import {setupLiveEditing} from './edit.js';
 
 // shorthand for document selectors
