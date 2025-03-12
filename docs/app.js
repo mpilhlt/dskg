@@ -1,5 +1,4 @@
 // external libraries
-import neo4j from './lib/neo4j-driver@5.27.0.mjs';
 import cytoscape from './lib/cytoscape@3.31.0.mjs';
 import cytoscape_cola from './lib/cytoscape-cola@2.5.1.mjs';
 //import cytoscape_popper from './lib/cytoscape-popper@2.0.0.mjs'
@@ -7,8 +6,14 @@ import { CookieStorage, UrlHash } from './lib/browser-utils.js';
 import cytoscape_layout from './config/layout-cola.js';
 import cytoscape_style from './config/cytoscape-style.js';
 
-import {setupLogin} from './login.js';
+// app modules
+import {setupLogin, showUserMessage} from './login.js';
+import {fetchGraph, testWriteAccess} from './neo4j.js';
+import {setupLiveEditing} from './edit.js';
 
+// shorthand for document selectors
+const $ = (selector, node) => (node||document).querySelector(selector);
+const $$ = (selector, node) => (node||document).querySelectorAll(selector);
 
 // app configuration
 cytoscape.use(cytoscape_cola);
@@ -22,14 +27,28 @@ let cy;
 
     // get data from neo4j or demo json
     let graph_data;
+    let connection_data;
+    let file_data;
     try {
-        let credentials = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
-        if (!credentials) {
-            const res = await fetch('../neo4j.json');
-            credentials = await res.json();
+        connection_data = (new CookieStorage()).get("mpilhlt_neo4j_credentials");
+        if (connection_data) {
+          // decode base64 encoded password
+          connection_data['password'] = atob(connection_data['password']);
+        } else {
+          // get credentials from json file
+            file_data = await fetch('../neo4j.json');
+            connection_data = await file_data.json();
         }
-        const {endpoint, database, username, password} = credentials
-        graph_data = await fetchGraph(endpoint, database, username, atob(password));
+        // get the graph data from the given connection
+        graph_data = await fetchGraph(connection_data);
+        // if connection data is not from a file, check if we can edit the data and enable editing if possible
+        file_data || testWriteAccess(connection_data).then((result) => {
+          if (result) {
+            console.log('Write access granted');
+            $('#node-info').classList.add('edit-enabled');
+            setupLiveEditing(handleSave);
+          }
+        }); 
     } catch (error) {
         if (error instanceof SyntaxError) {
             // a SyntaxError is thrown when the JSON file is not found and a 404 error is returned, 
@@ -56,13 +75,24 @@ let cy;
     window.addEventListener('hashchange', updateView);
         
     // add button actions
-    document.getElementById('task-button').addEventListener('click', () =>  UrlHash.set('view', 'Task'));
-    document.getElementById('people-button').addEventListener('click', () =>  UrlHash.set('view', 'Person'));
-    document.getElementById('tool-button').addEventListener('click', () =>  UrlHash.set('view', 'Tool'));
+    $('#task-button').addEventListener('click', () =>  UrlHash.set('view', 'Task'));
+    $('#people-button').addEventListener('click', () =>  UrlHash.set('view', 'Person'));
+    $('#tool-button').addEventListener('click', () =>  UrlHash.set('view', 'Tool'));
 
     // show grid or radial view
     updateView();
 })();
+
+const UNDO_STACK = []; 
+
+function handleSave(prop, value, previousValue) {
+  //UNDO_STACK.push({property: prop, value: previousValue})
+  // todo implement undo 
+
+  alert(`NOT IMPLEMENTED: Saving ${prop}: ${value}`)
+  // TODO: Save the value to your data source
+}
+
 
 function updateView() {   
     const view = UrlHash.get('view') || UrlHash.get('nodeId') || 'Task';
@@ -120,33 +150,45 @@ function initGraph(data) {
 }
 
 function showNodeInfo(node) {
-    const node_info_area = document.getElementById('node-info');
-    const title_elem = node_info_area.getElementsByClassName('node-info-title')[0];
-    const content_elem = node_info_area.getElementsByClassName('node-info-content')[0];
-
+    const container = $('#node-info');
+    
     // title
-    title_elem.innerHTML = node.data("label");
-
+    $('#node-info-title').innerHTML = node.data("label") || '';
+    
     // description
-    let content = '';
-    content += `<p>${node.data("description")}</p>`;
-    const url = node.data("url");
+    $('#node-info-description').innerHTML = node.data("description") || '';
+    
+    // image
+    const node_info_img = $('#node-info-image')
+    if (node.data("image_url")) {
+        node_info_img.src = node.data("image_url")
+        node_info_img.alt = `Image for ${node.data("label")}`
+        node_info_img.display = 'block';
+    } else {
+        node_info_img.src = ''
+        node_info_img.alt = ''
+        node_info_img.display = 'none';
+    }
 
     // url link
+    const url = node.data("url");
+    const node_info_url = $('#node-info-url');
+    let url_text
     if (url) {
-        const hostname = new URL(url).hostname;
-        content += `<p><a href="${url}" target="_blank">More information on ${hostname}</a></p>`;
+        try {
+            const hostname = new URL(url).hostname;
+            url_text = `<a href="${url}" target="_blank">More information on ${hostname}</a>`;
+        }
+        catch (e) {   
+            url_text = url;
+        }
+        node_info_url.innerHTML = url_text  
+     } else {
+        node_info_url.innerHTML = '';
     }
-
-    // image
-    if (node.data("image_url")) {
-        content += `<img src="${node.data("image_url")}" alt="Image for ${node.data("label")}" class="node-info-image">`;
-    }
-
-    // Instructions for navigation
-    content += `<p>Long-tap or double-click on a node to navigate...</p>`;
-    content_elem.innerHTML = content;
-    node_info_area.style.display = "block";
+    
+    // show container
+    container.style.display = "block";
 }
 
 function hideNodeInfo() {
@@ -222,51 +264,4 @@ function showNodeGrid(selector) {
       cy.fit(cy.nodes(), 50); // Add padding of 50 (can adjust as needed)4
       cy.layout({ name: 'preset',  randomize: false }).run();
       nodes.lock()
-    
 }
-
-// fetches graph data from Neo4J
-async function fetchGraph(endpoint, database, username, password) {
-    const driver = neo4j.driver(endpoint, neo4j.auth.basic(username, password));
-    const session = driver.session({ database });
-    let node_result, edge_result;
-    try {
-        node_result = await session.run(`MATCH (n) RETURN n`);
-        edge_result = await session.run(`MATCH (n)-[r]->(m) RETURN r`);
-    } catch (error) {
-        console.error(error)
-        throw error; // Rethrow the error
-    } finally {
-        session.close();
-    }
-    const nodes = node_result.records.map((record) => {
-        const node = record.get('n');
-        const type = node.labels[0];
-        const id = "node-" + node.identity.low
-        const label = node.properties.name;
-        const data = { id, label, type };
-        if (node.properties.image_url) {
-            data.image_url = node.properties.image_url;
-        }
-        if (node.properties.URL) {
-            data.url = node.properties.URL;
-        }
-        data.description = node.properties.description || '';
-        return { data };
-    });
-    const edges = edge_result.records.map((record) => {
-        const edge = record.get('r');
-        return {
-            data: {
-                id: `edge-${edge.start.low}-${edge.end.low}`,
-                source: "node-" + edge.start.low,
-                target: "node-" + edge.end.low,
-                type: edge.type
-            }
-        };
-    });
-    const data = nodes.concat(edges);
-    //console.dir(data)
-    return data;
-}
-

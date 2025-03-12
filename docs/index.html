@@ -15,11 +15,15 @@
     <button id="people-button">People</button>
     <button id="tool-button">Tools</button>
     <button id="login-button">Login</button>
+    <button id="undo-button">⎌</button>
   </div>
   
   <div id="node-info">
-    <div class="node-info-title"></div>
-    <div class="node-info-content"></div>
+    <div id="node-info-title" class="live-edit" data-prop="title"></div>
+    <p id="node-info-description" class="live-edit" data-prop="description"></p> 
+    <img id="node-info-image"></img>
+    <p id="node-info-url"></p>
+    <p>Long-tap or double-click on a node to navigate...</p>
   </div> 
 
   <!-- the cytoscape graph-->
@@ -48,30 +52,6 @@
       </div>
     </form>
   </dialog>
-
-    <!-- Node editor -->
-    <dialog id="node-editor">
-      <form method="dialog" id="node-form">
-        <div class="dialog-header">Please edit the node properties</div>
-  
-        <label for="label">Label:</label>
-        <input type="text" name="endpoint" required>
-  
-        <label for="endpoint">Description:</label>
-        <input type="text" name="description">
-  
-        <label for="username">URL:</label>
-        <input type="text" name="url">
-  
-        <label for="password">Image URL:</label>
-        <input type="password" name="image-url">
-  
-        <div class="dialog-footer">
-          <button type="submit">Save</button>
-          <button type="button" class="cancel-button">Cancel</button>
-        </div>
-      </form>
-    </dialog>
   
   <!-- User message -->
   <dialog id="userMessage">

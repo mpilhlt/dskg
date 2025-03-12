@@ -49,17 +49,17 @@ body {
     display: none;
 }
 
-.node-info-title {
+#node-info-title {
     font-weight: bold;
     margin-bottom: 5px;
 }
 
-.node-info-content {
+#node-info-content {
     margin-bottom: 10px;
 }
 
-.node-info-image {
-    width: 100%;
+#node-info-image {
+    max-width: 100%;
     height: auto;
     margin-bottom: 10px;
 }
@@ -101,3 +101,10 @@ button {
 #login-button {
     display: none;
 }
+
+.live-edit:not([data-edit])::after  {
+    content: "\270E";
+    margin-left: 10px;
+    display: inline-block;
+    transform: rotateZ(90deg);
+  }
