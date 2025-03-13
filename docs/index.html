@@ -4,25 +4,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>mpilhlt Digital Services Knowledge Graph</title>
+  <title>mpilhlt Knowledge Graph Viewer</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-  <div id="title">mpilhlt Digital Services Knowledge Graph</div>
+  <!-- title -->
+  <div id="title">mpilhlt Knowledge Graph Viewer</div>
+
+  <!-- menu -->
   <div id="menu">
-    <button id="task-button">Tasks</button>
-    <button id="people-button">People</button>
-    <button id="tool-button">Tools</button>
     <button id="login-button">Login</button>
     <button id="undo-button">⎌</button>
   </div>
   
+  <!-- node info -->
   <div id="node-info">
-    <div id="node-info-title" class="live-edit" data-prop="title"></div>
-    <p id="node-info-description" class="live-edit" data-prop="description"></p> 
+    <div id="node-info-title" class="live-edit" data-prop="label" data-description="Title"></div>
+    <p id="node-info-description" class="live-edit" data-prop="description" data-description="Description"></p> 
     <img id="node-info-image"></img>
-    <p id="node-info-url"></p>
+    <div>
+      <a id="node-info-url" target="_blank" class="live-edit edit-only" data-prop="URL" data-description="URL"></a>
+      <div id="node-info-image-url" class="live-edit edit-only" data-prop="image_url" data-description="Image URL"></div>
+    </div>
+    <p id="node-info-url-formatted"></p>
+    <div id="node-info-buttons" class="edit-only"></div>
+    <hr>
     <p>Long-tap or double-click on a node to navigate...</p>
   </div> 
 

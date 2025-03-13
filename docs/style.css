@@ -104,12 +104,50 @@ button {
 
 #undo-button {
     display: none;
-    font-size: xx-large;
+    font-size: large;
 }
 
-.live-edit:not([data-edit])::after  {
+#userMessage {
+    padding: 10px;
+    max-width: 50%;
+    border-radius: 5px;
+}
+
+
+.edit-only {
+    display: none;
+}
+
+.edit-enabled .edit-only {
+    display: block;
+}
+
+.edit-enabled [data-description]:empty::before {
+    content: attr(data-description);
+    color: grey;
+}
+
+.edit-enabled .live-edit:not([data-edit])::after  {
     content: "\270E";
     margin-left: 10px;
     display: inline-block;
     transform: rotateZ(90deg);
-  }
+}
+
+#node-info-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+/*
+#node-info-url:not(empty)::before {
+    content: "🔗"
+}
+
+#node-info-image-url:not(empty)::before {
+    content: "🖼️"
+}
+*/
+.danger {
+    color: red;
+}

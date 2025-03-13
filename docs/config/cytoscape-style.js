@@ -1,7 +1,7 @@
 export default [
     {
         // default node style
-        selector: 'node',
+        selector: 'node[label]',
         style: {
 
             'width': 60,
