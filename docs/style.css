@@ -46,7 +46,9 @@ body {
     border-left: 1px solid #ccc;
     padding: 10px;
     overflow: hidden;
-    display: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 #node-info-title {
@@ -108,9 +110,7 @@ button {
 }
 
 #userMessage {
-    padding: 10px;
     max-width: 50%;
-    border-radius: 5px;
 }
 
 
@@ -139,15 +139,21 @@ button {
     flex-direction: column;
     gap: 5px;
 }
-/*
-#node-info-url:not(empty)::before {
+
+#node-info-url, #node-info-image-url  {
+    font-size: small;
+    margin: 0px;
+    padding: 2px;
+}
+
+#node-info-url::before {
     content: "🔗"
 }
 
-#node-info-image-url:not(empty)::before {
+#node-info-image-url::before {
     content: "🖼️"
 }
-*/
+
 .danger {
     color: red;
 }

@@ -166,14 +166,17 @@ function showNodeInfo(node) {
 
   // image
   const node_info_img = $('#node-info-image')
+  const node_info_image_url = $('#node-info-image-url');
   if (node.data("image_url")) {
     node_info_img.src = node.data("image_url")
     node_info_img.alt = `Image for ${node.data("label")}`
     node_info_img.display = 'block';
+    node_info_image_url.value = node.data("image_url");
   } else {
     node_info_img.src = ''
     node_info_img.alt = ''
     node_info_img.display = 'none';
+    node_info_image_url.value = '';
   }
 
   // url link
@@ -189,12 +192,10 @@ function showNodeInfo(node) {
     catch (e) {
       url_text = url;
     }
-    node_info_url.textContent = url;
-    node_info_url.src = url;
+    node_info_url.value = url;
     node_info_url_formatted.innerHTML = url_text
   } else {
-    node_info_url.textContent = '';
-    node_info_url.src = '';
+    node_info_url.value = '';
     node_info_url_formatted.innerHTML = ''
   }
   
@@ -235,7 +236,7 @@ function showNodeInfo(node) {
     buttonContainer.appendChild(deleteButton);
   }
   // show container
-  container.style.display = "block";
+  container.style.display = "flex";
 }
 
 async function createChildNode(parent, rel, label) {
@@ -267,11 +268,17 @@ function hideNodeInfo() {
 }
 
 async function handleSave(prop, value, previousValue) {
-  let node = selectedNode
-  undo(async () => {
-    await _updateNode(node, prop, previousValue);
-    $(`[data-prop="${prop}"]`).textContent = previousValue;
-  })
+  let node = selectedNode || getGraph().$(`#${UrlHash.get('view')}`);
+  if (!node) {   
+    console.error('No node selected');
+    return;
+  }
+  if (previousValue){
+    undo(async () => {
+      await _updateNode(node, prop, previousValue);
+      $(`[data-prop="${prop}"]`).textContent = previousValue;
+    })
+  }
   await _updateNode(node, prop, value);
 }
 

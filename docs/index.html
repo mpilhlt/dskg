@@ -21,16 +21,13 @@
   <!-- node info -->
   <div id="node-info">
     <div id="node-info-title" class="live-edit" data-prop="label" data-description="Title"></div>
-    <p id="node-info-description" class="live-edit" data-prop="description" data-description="Description"></p> 
+    <div id="node-info-description" class="live-edit" data-prop="description" data-description="Description"></div> 
     <img id="node-info-image"></img>
-    <div>
-      <a id="node-info-url" target="_blank" class="live-edit edit-only" data-prop="URL" data-description="URL"></a>
-      <div id="node-info-image-url" class="live-edit edit-only" data-prop="image_url" data-description="Image URL"></div>
-    </div>
-    <p id="node-info-url-formatted"></p>
+    <input id="node-info-url" class="edit-only" data-prop="URL" placeholder="URL" />
+    <input id="node-info-image-url" class="edit-only" data-prop="image_url" placeholder="Image URL" />
+    <div id="node-info-url-formatted"></div>
     <div id="node-info-buttons" class="edit-only"></div>
-    <hr>
-    <p>Long-tap or double-click on a node to navigate...</p>
+    <div>Long-tap or double-click on a node to navigate...</div>
   </div> 
 
   <!-- the cytoscape graph-->
