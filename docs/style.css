@@ -46,7 +46,7 @@ body {
     border-left: 1px solid #ccc;
     padding: 10px;
     overflow: hidden;
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 10px;
 }
@@ -85,7 +85,7 @@ dialog {
     text-align: right;
 }
 
-input {
+dialog input {
     display: block;
     width: 100%;
     padding: 8px;

@@ -127,9 +127,10 @@ function updateView() {
       if (view.startsWith('node-')) {
         showRadial(view)
         showNodeInfo(getGraph().$(`#${view}`));
+      } else {  
+        hideNodeInfo()
       }
   }
-  UrlHash.remove('nodeId');
 }
 
 function setupNodeBehavior() {
