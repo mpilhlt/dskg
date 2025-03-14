@@ -22,36 +22,49 @@ let selectedNode;
   let graph_data;
   let connection_data;
   let file_data;
+  let timeout = 2000; // timeout of 2 seconds for file retrieval and neo4j connection
   try {
     connection_data = getStoredConnectionData();
     if (!connection_data) {
-      const signal = new AbortController().signal;
-      setTimeout(() => controller.abort(), 3000); // only wait 3 seconds 
+      console.log("Looking for local credentials...")
+      const controller = new AbortController(); 
+      const signal = controller.signal;
+      setTimeout(() => controller.abort(), timeout); 
       // get credentials from json file
-      file_data = await fetch('../neo4j.json');
+      file_data = await fetch('../neo4j.json', {signal});
       connection_data = await file_data.json();
+      console.log("Retrieved credentials from neoj.json")
     }
+
     // initialize the connection and process metadata
-    await initConnection(connection_data);
+    await initConnection(connection_data, timeout);
     metadata = await getMetadata();
     processMetadata(metadata);
 
     // get the graph data from the given connection
     graph_data = await fetchGraphData();
     // if connection data is not from a file, check if we can edit the data and enable editing if possible
-    file_data || testWriteAccess().then((result) => {
-      if (result) {
-        console.log('Write access granted');
-        $('#node-info').classList.add('edit-enabled');
-        setupLiveEditing(handleSave);
-        setAuthStatus(true, connection_data.username);
+    if (!file_data) {
+      try {
+        const hasWriteAccess = await testWriteAccess();
+        if (hasWriteAccess) {
+          $('#node-info').classList.add('edit-enabled');
+          setupLiveEditing(handleSave);
+          setAuthStatus(true, connection_data.username);
+        } else {
+          setAuthStatus(false)
+        }
+      } catch (error) {
+        console.error(error.message)
+        //logout();
       }
-    });
+    }
   } catch (error) {
-    if (error instanceof SyntaxError || error instanceof AbortError ) {
+    if (error instanceof SyntaxError || error instanceof AbortSignal ) {
       // Ignore if file cannot be found. This is indicated by a SyntaxError which is thrown when the JSON file is not found 
-      // and a 404 error is returned, which cannot be parsed as JSON, the timeout of three seconds is reached, which throws an
-      // AbortError. Igore in both cases
+      // and a 404 error is returned, which cannot be parsed as JSON, the timeout is reached, which throws an
+      // AbortError
+      console.log("No local neo4j.json file.")
     } else {
       // credentials seem to be wrong
       console.error(`${error.name} error: `+ error.message);

@@ -33,7 +33,6 @@ export function setAuthStatus(status = false, username) {
     login_button.textContent = `Logout ${username}`;
   } else {
     login_button.textContent = 'Login';
-    cookieStorage.remove(COOKIE_NAME);
   }
 }
 
@@ -50,9 +49,7 @@ export function authenticate() {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     dialog.close();
-
     // save credentials in cookies and reload the page
-
     const { endpoint, database, username, password } = form.elements;
     cookieStorage.set(COOKIE_NAME, {
       endpoint: endpoint.value,
@@ -67,5 +64,6 @@ export function authenticate() {
 
 export function logout() {
   setAuthStatus(false);
+  cookieStorage.remove(COOKIE_NAME);
   document.location.reload(); 
 }

@@ -2,14 +2,51 @@ import neo4j from './lib/neo4j-driver@5.27.0.mjs';
 
  const CONNECTION_DATA = {};
 
- export async function initConnection(connection_data) {
-    Object.assign(CONNECTION_DATA, connection_data);
- }
+ /**
+  * Initializes and tests the connection
+  * @param {Object} connection_data 
+  * @param {int} timeout Timeout in milliseconds after which an `Error` is thrown.
+  * @throws {Error}  
+  */
+ export async function initConnection(connection_data, timeout=2000) {
+  Object.assign(CONNECTION_DATA, connection_data);
+  console.log("Testing Neo4J connection access...");
+  const info = await Promise.race([
+    getDriver().getServerInfo(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("No connection to Neo4J database")), timeout))
+  ]);
+  console.log(info);
+}
+
+function getDriver() {
+  const { endpoint, username, password } = CONNECTION_DATA
+  return neo4j.driver(endpoint, neo4j.auth.basic(username, password));
+}
 
 function getSession() {
-  const { endpoint, database, username, password } = CONNECTION_DATA
-  const driver = neo4j.driver(endpoint, neo4j.auth.basic(username, password));
-  return driver.session({ database });
+  const driver = getDriver();
+  const { database } = CONNECTION_DATA
+  return driver.session({ database, defaultTransactionTimeout: 3000 });
+}
+
+export async function testWriteAccess() {
+  const session = getSession();
+  try {
+    console.log("Testing access rights...");
+    await session.run(`MERGE (n:TestNode {name: 'Test1'})-[r:TEST_RELATION]->(m:TestNode {name: 'Test2'})`);
+    await session.run(`MATCH (n:TestNode {name: 'Test1'}) SET n.name = 'Test3'`);
+    await session.run(`MATCH (n:TestNode {name: 'Test3'})-[r:TEST_RELATION]->(m:TestNode {name: 'Test2'}) delete n,r,m`)
+    console.log('Write access granted');
+  } catch (error) {
+    if (error.message.includes('not allowed')) {
+      console.log('Access is read-only')
+      return false;
+    }
+    throw error;
+  } finally {
+    session.close();
+  }
+  return true;
 }
 
 // fetches graph data from Neo4J
@@ -63,22 +100,7 @@ function neo2cyto(node) {
   return data;
 }
 
-export async function testWriteAccess() {
-  const session = getSession();
-  try {
-    await session.run(`MERGE (n:TestNode {name: 'Test1'})-[r:TEST_RELATION]->(m:TestNode {name: 'Test2'})`);
-    await session.run(`MATCH (n:TestNode {name: 'Test1'}) SET n.name = 'Test3'`);
-    await session.run(`MATCH (n:TestNode {name: 'Test3'})-[r:TEST_RELATION]->(m:TestNode {name: 'Test2'}) delete n,r,m`)
-  } catch (error) {
-    if (error.message.includes('not allowed')) {
-      return false;
-    }
-    throw error;
-  } finally {
-    session.close();
-  }
-  return true;
-}
+
 
 export async function updateNode(elementId, propertyMap) {
   const session = getSession();
