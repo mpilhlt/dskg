@@ -66,8 +66,8 @@ let selectedNode;
       // AbortError
       console.log("No local neo4j.json file.")
     } else {
-      // credentials seem to be wrong
-      console.error(`${error.name} error: `+ error.message);
+      // Timeout, Authentication, or any other error
+      console.warn(`${error.name}: `+ error.message);
     }
     // in any case, we load the demo data instead
     UrlHash.remove('view');
@@ -131,7 +131,7 @@ async function getDemoData() {
 }
 
 function updateView() {
-  const view = UrlHash.get('view') || UrlHash.get('nodeId') || 'Task';
+  const view = UrlHash.get('view') || 'Task';
   switch (view) {
     case 'Task':
     case 'Person':
@@ -139,11 +139,13 @@ function updateView() {
       showNodeGrid(`[type="${view}"]`);
       break;
     default:
-      if (view.startsWith('node-')) {
+      const node = getGraph().$(`#${view}`);
+      if (node) {
         showRadial(view)
-        showNodeInfo(getGraph().$(`#${view}`));
-      } else {  
+        showNodeInfo(node);
+      } else {
         hideNodeInfo()
+        UrlHash.remove('view')
       }
   }
 }

@@ -11,11 +11,12 @@ import neo4j from './lib/neo4j-driver@5.27.0.mjs';
  export async function initConnection(connection_data, timeout=2000) {
   Object.assign(CONNECTION_DATA, connection_data);
   console.log("Testing Neo4J connection access...");
-  const info = await Promise.race([
-    getDriver().getServerInfo(),
+  const driver = getDriver();
+  await Promise.race([
+    driver.getServerInfo(),
     new Promise((_, reject) => setTimeout(() => reject(new Error("No connection to Neo4J database")), timeout))
-  ]);
-  console.log(info);
+  ]).finally(async () => await driver.close());
+  console.log(`Successfully established connection for user ${CONNECTION_DATA.username}.`);
 }
 
 function getDriver() {
@@ -51,6 +52,7 @@ export async function testWriteAccess() {
 
 // fetches graph data from Neo4J
 export async function fetchGraphData() {
+  console.log("Retrieving graph data...")
   const session = getSession();
   let node_result, edge_result;
   try {
@@ -121,6 +123,7 @@ export async function updateNode(elementId, propertyMap) {
 }
 
 export async function getMetadata() {
+  console.log("Retrieving metadata...")
   const session = getSession();
   try {
       const result = await session.run(`MATCH (m:Metadata) return m.key as key, m.value as value`);
