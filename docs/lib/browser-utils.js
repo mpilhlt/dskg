@@ -1,3 +1,6 @@
+ /**
+  * Minimal Cookie API
+  */
  export class CookieStorage {
     /**
      * Constructor for CookieStorage.

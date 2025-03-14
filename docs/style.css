@@ -100,9 +100,6 @@ button {
     white-space: nowrap;
 }
 
-#login-button {
-    display: none;
-}
 
 #undo-button {
     display: none;

@@ -1,8 +1,9 @@
-// external libraries
+// custom libraries
 import { CookieStorage, UrlHash } from './lib/browser-utils.js';
+import { showUserMessage } from './lib/dialogs.js'
 
 // app modules
-import { setupLogin, showUserMessage, getStoredConnectionData } from './login.js';
+import { setAuthStatus, getStoredConnectionData, logout } from './login.js';
 import { initConnection, fetchGraphData, testWriteAccess, updateNode, getMetadata, addRelation } from './neo4j.js';
 import { setupLiveEditing } from './edit.js';
 import { initGraph, getGraph, showRadial, showNodeGrid } from './graph.js';
@@ -24,6 +25,8 @@ let selectedNode;
   try {
     connection_data = getStoredConnectionData();
     if (!connection_data) {
+      const signal = new AbortController().signal;
+      setTimeout(() => controller.abort(), 3000); // only wait 3 seconds 
       // get credentials from json file
       file_data = await fetch('../neo4j.json');
       connection_data = await file_data.json();
@@ -41,24 +44,23 @@ let selectedNode;
         console.log('Write access granted');
         $('#node-info').classList.add('edit-enabled');
         setupLiveEditing(handleSave);
+        setAuthStatus(true, connection_data.username);
       }
     });
   } catch (error) {
-    if (error instanceof SyntaxError) {
-      // a SyntaxError is thrown when the JSON file is not found and a 404 error is returned, 
-      // which cannot be parsed as JSON. We ignore this error in this case.
+    if (error instanceof SyntaxError || error instanceof AbortError ) {
+      // Ignore if file cannot be found. This is indicated by a SyntaxError which is thrown when the JSON file is not found 
+      // and a 404 error is returned, which cannot be parsed as JSON, the timeout of three seconds is reached, which throws an
+      // AbortError. Igore in both cases
     } else {
       // credentials seem to be wrong
-      console.error('Could not retrieve data from Neo4j: ' + error.message);
-      (new CookieStorage()).remove("mpilhlt_neo4j_credentials");
+      console.error(`${error.name} error: `+ error.message);
     }
     // in any case, we load the demo data instead
     UrlHash.remove('view');
     [graph_data, metadata] = await getDemoData();
+    setAuthStatus(false);
   }
-
-  // show login button
-  setupLogin(true);
 
   // initialize the graph
   initGraph(graph_data);

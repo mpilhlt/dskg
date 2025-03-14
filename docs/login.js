@@ -1,9 +1,22 @@
-import { CookieStorage } from "./lib/browser-utils.js";
+import { CookieStorage } from "./lib/browser-utils.js"; // replace with https://github.com/js-cookie/js-cookie ?
 
-const login_button = document.getElementById('login-button');
-login_button.addEventListener('click', authenticate);
 const cookieStorage = new CookieStorage();
 const COOKIE_NAME = 'kg-viewer.connection_data';
+let user_is_authenticated = false;
+
+// setup login button
+const login_button = document.getElementById('login-button');
+login_button.addEventListener('click', () => {
+  if (user_is_authenticated) {
+    logout();
+  } else {
+    authenticate();
+  }
+});
+
+export function getAuthStatus() {
+  return user_is_authenticated;
+}
 
 export function getStoredConnectionData() {
   const connection_data = cookieStorage.get(COOKIE_NAME);
@@ -13,11 +26,14 @@ export function getStoredConnectionData() {
   return connection_data;
 }
 
-export function setupLogin(allow = false) {
-  if (allow) {
-    login_button.style.display = 'block';
+export function setAuthStatus(status = false, username) {
+  user_is_authenticated = status
+  login_button.style.display = 'block'; 
+  if (user_is_authenticated) {
+    login_button.textContent = `Logout ${username}`;
   } else {
-    login_button.style.display = 'none';
+    login_button.textContent = 'Login';
+    cookieStorage.remove(COOKIE_NAME);
   }
 }
 
@@ -49,10 +65,7 @@ export function authenticate() {
   dialog.showModal();
 }
 
-// Non-blocking alert()
-export function showUserMessage(title, message) {
-  const userMessage = document.getElementById('userMessage');
-  userMessage.showModal();
-  userMessage.querySelector('.dialog-header').textContent = title;
-  userMessage.querySelector('.dialog-content').textContent = message;
+export function logout() {
+  setAuthStatus(false);
+  document.location.reload(); 
 }
